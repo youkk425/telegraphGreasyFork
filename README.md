@@ -54,7 +54,8 @@
 3. 浏览器扩展弹出确认窗口，点击「安装」
 4. 刷新或访问 https://telegra.ph 即可生效
 
-# 📁 项目结构
+# 📁 项目结构  
+如题
 
 ## 📜 许可证
 本项目采用 GNU Lesser General Public License v3.0 开源许可证。  
