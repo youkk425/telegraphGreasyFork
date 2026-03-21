@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         【免费完整版】Telegraph 批量插入图床图片链接 + 简介工具
 // @namespace    github.com/youkk425
-// @version      2.0
-// @description  批量插入图床图片链接 + 拖拽排序 + 一键清空列表 + 清除空行 + 快速添加带标签的简介信息（插入主内容区开头）+ 新增移除简介和清空内容功能
+// @version      2.1
+// @description  批量插入图床图片链接 + 拖拽排序 + 一键清空列表 + 清除空行 + 快速添加带标签的简介信息+ 新增移除简介和清空内容功能+返回顶部按钮
 // @author       重写版（基于原脚本功能）
 // @source       https://github.com/youkk425/telegraphGreasyFork
 // @license      LGPL-3.0
@@ -18,6 +18,10 @@
 
 
 /*
+ * ============================================================================
+ *                           v2.1 更新日志
+ * ============================================================================
+ * 增加去到底部和回到顶部按钮键
 
  * ============================================================================
  *                           v2.0 更新日志
@@ -28,7 +32,6 @@
  * 4. 添加完整的代码注释和安全说明
 
 */
-
 
 
 (function () {
@@ -188,6 +191,151 @@
         btn.addEventListener('click', clickHandler);
         
         return btn;
+    }
+
+    // ============================================================================
+    //                    导航按钮（回到顶部/到达底部）
+    // ============================================================================
+    
+    /**
+     * 注入导航按钮所需的 CSS 动画样式
+     * @description 包含晃动、旋转、渐变等动画效果
+     */
+    function injectNavigationStyles() {
+        const styleId = 'telegraph-nav-styles';
+        if (document.getElementById(styleId)) return; // 避免重复注入
+        
+        const style = document.createElement('style');
+        style.id = styleId;
+        style.textContent = `
+            /* 晃动 + 旋转动画 - 0.6秒 */
+            @keyframes navWiggle {
+                0% { transform: translateY(0) rotate(0deg); }
+                15% { transform: translateY(-2px) rotate(-3deg); }
+                30% { transform: translateY(0) rotate(2deg); }
+                45% { transform: translateY(-2px) rotate(-2deg); }
+                60% { transform: translateY(0) rotate(1deg); }
+                75% { transform: translateY(-1px) rotate(-1deg); }
+                100% { transform: translateY(-2px) rotate(0deg); }
+            }
+            
+            /* 导航按钮基础样式 */
+            .telegraph-nav-btn {
+                width: 50px;
+                height: 50px;
+                border: none;
+                border-radius: 50%;
+                cursor: pointer;
+                font-size: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);
+                color: white;
+                box-shadow: 0 4px 15px rgba(156, 39, 176, 0.4);
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                position: relative;
+                overflow: hidden;
+            }
+            
+            /* 悬停效果：渐变切换 + 上浮 + 阴影变化 */
+            .telegraph-nav-btn:hover {
+                background: linear-gradient(135deg, #e91e63 0%, #f06292 100%);
+                box-shadow: 0 6px 25px rgba(233, 30, 99, 0.5), 0 0 20px rgba(233, 30, 99, 0.3);
+                transform: translateY(-2px);
+                animation: navWiggle 0.6s ease-in-out;
+            }
+            
+            /* 点击效果 */
+            .telegraph-nav-btn:active {
+                transform: translateY(0) scale(0.95);
+                box-shadow: 0 2px 10px rgba(233, 30, 99, 0.4);
+            }
+            
+            /* 按钮内部图标 */
+            .telegraph-nav-btn::before {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3) 0%, transparent 60%);
+                pointer-events: none;
+            }
+            
+            /* 导航按钮容器 */
+            .telegraph-nav-container {
+                position: fixed;
+                right: 20px;
+                bottom: 80px;
+                display: flex;
+                flex-direction: column;
+                gap: 15px;
+                z-index: 9998;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    /**
+     * 创建导航按钮（回到顶部/到达底部）
+     * @description 创建带有精美动画效果的导航按钮，固定在页面右下角
+     */
+    function createNavigationButtons() {
+        // 注入 CSS 样式
+        injectNavigationStyles();
+        
+        // 创建导航按钮容器
+        const navContainer = document.createElement('div');
+        navContainer.className = 'telegraph-nav-container';
+        
+        // ========== 回到顶部按钮 ==========
+        const scrollToTopBtn = document.createElement('button');
+        scrollToTopBtn.className = 'telegraph-nav-btn';
+        scrollToTopBtn.innerHTML = '⬆️';
+        scrollToTopBtn.title = '回到顶部';
+        scrollToTopBtn.setAttribute('aria-label', '回到顶部');
+        
+        /**
+         * 回到顶部点击事件
+         * @description 平滑滚动到页面顶部
+         */
+        scrollToTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+            showToast('已回到顶部', 'info');
+        });
+        
+        // ========== 到达底部按钮 ==========
+        const scrollToBottomBtn = document.createElement('button');
+        scrollToBottomBtn.className = 'telegraph-nav-btn';
+        scrollToBottomBtn.innerHTML = '⬇️';
+        scrollToBottomBtn.title = '到达底部';
+        scrollToBottomBtn.setAttribute('aria-label', '到达底部');
+        
+        /**
+         * 到达底部点击事件
+         * @description 平滑滚动到页面底部
+         */
+        scrollToBottomBtn.addEventListener('click', () => {
+            // 获取页面实际高度
+            const scrollHeight = Math.max(
+                document.documentElement.scrollHeight,
+                document.body.scrollHeight
+            );
+            window.scrollTo({
+                top: scrollHeight,
+                behavior: 'smooth'
+            });
+            showToast('已到达底部', 'info');
+        });
+        
+        // 组装导航容器
+        navContainer.appendChild(scrollToTopBtn);
+        navContainer.appendChild(scrollToBottomBtn);
+        
+        // 添加到页面
+        document.body.appendChild(navContainer);
     }
 
     // ============================================================================
@@ -445,7 +593,7 @@
             showSortBox();
         };
 
-        // 创建取消按钮
+        // 创建取消按钮（红色背景）
         const cancelBtn = document.createElement('button');
         cancelBtn.textContent = '取消';
         styleBtn(cancelBtn);
@@ -897,8 +1045,8 @@
         cancel.textContent = '取消';
         Object.assign(cancel.style, {
             padding: '12px 28px',
-            background: '#f44336',
-            color:'while',
+            background: '#f44336', // 红色背景
+            color: 'white',
             border: 'none',
             borderRadius: '6px',
             fontWeight: 'bold',
@@ -940,6 +1088,9 @@
     
     // 创建工具栏
     createToolbar();
+    
+    // 创建导航按钮（回到顶部/到达底部）
+    createNavigationButtons();
     
     // 输出加载成功日志
     console.log('Telegraph 批量插入 & 简介工具 v2.0 已加载');
