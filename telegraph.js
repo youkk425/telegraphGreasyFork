@@ -13,7 +13,12 @@
 
 /* global Sortable */
 
+//原脚本：https://greasyfork.org/zh-CN/scripts/532270
+
+
+
 /*
+
  * ============================================================================
  *                           v2.0 更新日志
  * ============================================================================
@@ -21,9 +26,10 @@
  * 2. 新增「清空内容」功能 - 一键清空编辑器所有内容
  * 3. 重新设计按钮布局 - 采用分组面板设计，更加合理美观
  * 4. 添加完整的代码注释和安全说明
- */
 
-//原脚本：https://greasyfork.org/zh-CN/scripts/532270
+*/
+
+
 
 (function () {
     'use strict';
@@ -443,6 +449,7 @@
         const cancelBtn = document.createElement('button');
         cancelBtn.textContent = '取消';
         styleBtn(cancelBtn);
+        cancelBtn.style.background = '#f44336'; // 红色背景
         cancelBtn.onclick = () => overlay.remove();
 
         buttonRow.appendChild(confirmBtn);
@@ -597,6 +604,7 @@
         const cancelBtn = document.createElement('button');
         cancelBtn.textContent = '取消';
         styleBtn(cancelBtn);
+        cancelBtn.style.background = '#f44336'; // 红色背景
         cancelBtn.onclick = () => overlay.remove();
 
         buttonRow.appendChild(clearAllBtn);
@@ -889,9 +897,11 @@
         cancel.textContent = '取消';
         Object.assign(cancel.style, {
             padding: '12px 28px',
-            background: '#e0e0e0',
+            background: '#f44336',
+            color:'while',
             border: 'none',
             borderRadius: '6px',
+            fontWeight: 'bold',
             cursor: 'pointer'
         });
         cancel.onclick = () => overlay.remove();
