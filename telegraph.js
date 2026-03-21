@@ -472,7 +472,7 @@
             .telegraph-speed-label {
                 font-size: 11px;
                 font-weight: 600;
-                color: rgba(255, 255, 255, 0.9);
+                color: rgba(66,165,245,0.5);
                 text-transform: uppercase;
                 letter-spacing: 1px;
                 text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
