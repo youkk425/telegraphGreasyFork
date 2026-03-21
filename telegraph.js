@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         【免费完整版】Telegraph 批量插入图床图片链接 + 简介工具
 // @namespace    github.com/youkk425
-// @version      2.1
+// @version      2.2
 // @description  批量插入图床图片链接 + 拖拽排序 + 一键清空列表 + 清除空行 + 快速添加带标签的简介信息+ 新增移除简介和清空内容功能+返回顶部按钮
 // @author       重写版（基于原脚本功能）
 // @source       https://github.com/youkk425/telegraphGreasyFork
@@ -19,6 +19,13 @@
 
 /*
  * ============================================================================
+ *                           v2.2 更新日志
+ * ============================================================================
+ * 1. 自动播放按钮位置调整 - 放置于返回顶部按钮正上方，与其对齐
+ * 2. 新增拖拽移动功能 - 悬停显示移动开关，开启后可自由拖拽按钮位置
+ * 3. 速度文本颜色调整 - 改为黑色，提升可读性
+ *
+ * ============================================================================
  *                           v2.1 更新日志
  * ============================================================================
  * 增加去到底部和回到顶部按钮键
@@ -33,14 +40,13 @@
 
 */
 
-
 (function () {
     'use strict';
 
     // ============================================================================
     //                           全局变量声明
     // ============================================================================
-    
+
     /**
      * 存储用户输入的原始图片链接数组
      * @type {string[]}
@@ -48,14 +54,14 @@
      * @security 注意：此数组存储用户原始输入，未经清理，使用时需验证
      */
     let imageLinks = [];
-    
+
     /**
      * 存储排序后的图片链接数组
      * @type {string[]}
      * @description 用户完成拖拽排序后，按新顺序存储的链接
      */
     let sortedLinks = [];
-    
+
     /**
      * 简介标识属性名
      * @type {string}
@@ -66,7 +72,7 @@
     // ============================================================================
     //                    创建工具栏面板
     // ============================================================================
-    
+
     /**
      * 创建主工具栏面板
      * @description 采用分组设计，将功能按钮按类别分组
@@ -85,35 +91,35 @@
             gap: '8px',
             fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
         });
-        
+
         // ========== 图片操作组 ==========
         const imageGroup = createButtonGroup('🖼️ 图片操作', '#4caf50');
-        
+
         const insertBtn = createButton('📷 批量插入图片', '#4caf50', showInputBox);
         imageGroup.appendChild(insertBtn);
-        
+
         toolbar.appendChild(imageGroup);
-        
+
         // ========== 简介操作组 ==========
         const introGroup = createButtonGroup('📝 简介操作', '#9c27b0');
-        
+
         const addIntroBtn = createButton('➕ 添加简介', '#9c27b0', showIntroPanel);
         const removeIntroBtn = createButton('➖ 移除简介', '#e91e63', removeIntro);
         introGroup.appendChild(addIntroBtn);
         introGroup.appendChild(removeIntroBtn);
-        
+
         toolbar.appendChild(introGroup);
-        
+
         // ========== 清理操作组 ==========
         const clearGroup = createButtonGroup('🧹 清理操作', '#ff9800');
-        
+
         const clearEmptyBtn = createButton('清除空行', '#ff9800', clearEmptyLines);
         const clearAllBtn = createButton('清空内容', '#f44336', clearAllContent);
         clearGroup.appendChild(clearEmptyBtn);
         clearGroup.appendChild(clearAllBtn);
-        
+
         toolbar.appendChild(clearGroup);
-        
+
         // 添加到页面
         document.body.appendChild(toolbar);
     }
@@ -136,7 +142,7 @@
             gap: '6px',
             minWidth: '140px'
         });
-        
+
         // 分组标题
         const groupTitle = document.createElement('div');
         groupTitle.textContent = title;
@@ -149,7 +155,7 @@
             marginBottom: '2px'
         });
         group.appendChild(groupTitle);
-        
+
         return group;
     }
 
@@ -176,7 +182,7 @@
             whiteSpace: 'nowrap',
             textAlign: 'left'
         });
-        
+
         // 鼠标悬停效果
         btn.addEventListener('mouseenter', () => {
             btn.style.transform = 'translateX(3px)';
@@ -186,17 +192,17 @@
             btn.style.transform = 'translateX(0)';
             btn.style.boxShadow = 'none';
         });
-        
+
         // 绑定点击事件
         btn.addEventListener('click', clickHandler);
-        
+
         return btn;
     }
 
     // ============================================================================
     //                    导航按钮（回到顶部/到达底部）
     // ============================================================================
-    
+
     /**
      * 注入导航按钮所需的 CSS 动画样式
      * @description 包含晃动、旋转、渐变等动画效果
@@ -204,7 +210,7 @@
     function injectNavigationStyles() {
         const styleId = 'telegraph-nav-styles';
         if (document.getElementById(styleId)) return; // 避免重复注入
-        
+
         const style = document.createElement('style');
         style.id = styleId;
         style.textContent = `
@@ -218,7 +224,7 @@
                 75% { transform: translateY(-1px) rotate(-1deg); }
                 100% { transform: translateY(-2px) rotate(0deg); }
             }
-            
+
             /* 导航按钮基础样式 */
             .telegraph-nav-btn {
                 width: 50px;
@@ -237,7 +243,7 @@
                 position: relative;
                 overflow: hidden;
             }
-            
+
             /* 悬停效果：渐变切换 + 上浮 + 阴影变化 */
             .telegraph-nav-btn:hover {
                 background: linear-gradient(135deg, #e91e63 0%, #f06292 100%);
@@ -245,13 +251,13 @@
                 transform: translateY(-2px);
                 animation: navWiggle 0.6s ease-in-out;
             }
-            
+
             /* 点击效果 */
             .telegraph-nav-btn:active {
                 transform: translateY(0) scale(0.95);
                 box-shadow: 0 2px 10px rgba(233, 30, 99, 0.4);
             }
-            
+
             /* 按钮内部图标 */
             .telegraph-nav-btn::before {
                 content: '';
@@ -260,7 +266,7 @@
                 background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3) 0%, transparent 60%);
                 pointer-events: none;
             }
-            
+
             /* 导航按钮容器 */
             .telegraph-nav-container {
                 position: fixed;
@@ -270,6 +276,284 @@
                 flex-direction: column;
                 gap: 15px;
                 z-index: 9998;
+            }
+
+            /* ======================================== */
+            /* 自动滚动控制器样式 - 玻璃态高级设计 */
+            /* ======================================== */
+
+            /* 控制器容器 - 玻璃态效果 */
+            .telegraph-autoscroll-container {
+                position: fixed;
+                right: 20px;
+                bottom: 210px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 12px;
+                z-index: 9998;
+            }
+
+            /* 移动模式下的拖拽样式 */
+            .telegraph-autoscroll-container.draggable {
+                cursor: move;
+            }
+
+            .telegraph-autoscroll-container.dragging {
+                opacity: 0.8;
+                transform: scale(1.05);
+            }
+
+            /* 移动模式开关按钮 */
+            .telegraph-move-toggle {
+                position: absolute;
+                top: -30px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 240, 240, 0.95) 100%);
+                border: 1px solid rgba(0, 0, 0, 0.1);
+                border-radius: 20px;
+                padding: 4px 12px;
+                font-size: 11px;
+                font-weight: 600;
+                color: #333;
+                cursor: pointer;
+                white-space: nowrap;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+                opacity: 0;
+                transition: opacity 0.3s ease, transform 0.3s ease;
+                z-index: 10;
+            }
+
+            .telegraph-autoscroll-container:hover .telegraph-move-toggle {
+                opacity: 1;
+            }
+
+            .telegraph-move-toggle:hover {
+                background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+                border-color: #2196f3;
+            }
+
+            .telegraph-move-toggle.active {
+                background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+                color: white;
+                border-color: #4caf50;
+            }
+
+            .telegraph-move-toggle.active:hover {
+                background: linear-gradient(135deg, #66bb6a 0%, #81c784 100%);
+            }
+
+            /* 主控制按钮 - 玻璃态渐变 */
+            .telegraph-autoscroll-btn {
+                width: 56px;
+                height: 56px;
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                border-radius: 50%;
+                cursor: pointer;
+                font-size: 22px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: linear-gradient(135deg,
+                    rgba(138, 43, 226, 0.7) 0%,
+                    rgba(75, 0, 130, 0.6) 50%,
+                    rgba(148, 0, 211, 0.7) 100%);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                color: white;
+                box-shadow:
+                    0 8px 32px rgba(138, 43, 226, 0.4),
+                    inset 0 1px 1px rgba(255, 255, 255, 0.2),
+                    0 0 0 1px rgba(255, 255, 255, 0.1);
+                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                position: relative;
+                overflow: hidden;
+            }
+
+            /* 按钮内部光晕效果 */
+            .telegraph-autoscroll-btn::before {
+                content: '';
+                position: absolute;
+                inset: -2px;
+                background: conic-gradient(from 0deg,
+                    transparent,
+                    rgba(255, 255, 255, 0.3),
+                    transparent,
+                    rgba(255, 182, 193, 0.3),
+                    transparent);
+                border-radius: 50%;
+                animation: rotateGlow 4s linear infinite;
+                opacity: 0;
+                transition: opacity 0.4s ease;
+            }
+
+            .telegraph-autoscroll-btn:hover::before {
+                opacity: 1;
+            }
+
+            @keyframes rotateGlow {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+
+            /* 按钮悬停效果 */
+            .telegraph-autoscroll-btn:hover {
+                transform: translateY(-3px) scale(1.05);
+                background: linear-gradient(135deg,
+                    rgba(186, 85, 211, 0.85) 0%,
+                    rgba(138, 43, 226, 0.75) 50%,
+                    rgba(218, 112, 214, 0.85) 100%);
+                box-shadow:
+                    0 12px 40px rgba(186, 85, 211, 0.5),
+                    inset 0 1px 1px rgba(255, 255, 255, 0.3),
+                    0 0 20px rgba(218, 112, 214, 0.4);
+            }
+
+            /* 按钮激活状态（滚动中） */
+            .telegraph-autoscroll-btn.active {
+                background: linear-gradient(135deg,
+                    rgba(255, 107, 107, 0.85) 0%,
+                    rgba(255, 71, 87, 0.75) 50%,
+                    rgba(255, 127, 80, 0.85) 100%);
+                box-shadow:
+                    0 8px 32px rgba(255, 107, 107, 0.5),
+                    inset 0 1px 1px rgba(255, 255, 255, 0.2),
+                    0 0 25px rgba(255, 107, 107, 0.5);
+                animation: pulseActive 1.5s ease-in-out infinite;
+            }
+
+            @keyframes pulseActive {
+                0%, 100% {
+                    transform: scale(1);
+                    box-shadow:
+                        0 8px 32px rgba(255, 107, 107, 0.5),
+                        0 0 25px rgba(255, 107, 107, 0.5);
+                }
+                50% {
+                    transform: scale(1.02);
+                    box-shadow:
+                        0 8px 32px rgba(255, 107, 107, 0.6),
+                        0 0 35px rgba(255, 107, 107, 0.6);
+                }
+            }
+
+            /* 速度控制面板 - 玻璃态 */
+            .telegraph-speed-panel {
+                background: linear-gradient(135deg,
+                    rgba(255, 255, 255, 0.15) 0%,
+                    rgba(255, 255, 255, 0.08) 100%);
+                backdrop-filter: blur(16px);
+                -webkit-backdrop-filter: blur(16px);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                border-radius: 16px;
+                padding: 14px 16px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+                box-shadow:
+                    0 8px 32px rgba(0, 0, 0, 0.15),
+                    inset 0 1px 1px rgba(255, 255, 255, 0.1);
+                min-width: 100px;
+                transition: all 0.3s ease;
+                opacity: 0;
+                transform: translateY(10px);
+                pointer-events: none;
+            }
+
+            .telegraph-speed-panel.visible {
+                opacity: 1;
+                transform: translateY(0);
+                pointer-events: auto;
+            }
+
+            /* 速度标签 */
+            .telegraph-speed-label {
+                font-size: 11px;
+                font-weight: 600;
+                color: rgba(255, 255, 255, 0.9);
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            }
+
+            /* 速度值显示 */
+            .telegraph-speed-value {
+                font-size: 18px;
+                font-weight: bold;
+                color: #000;
+                text-shadow: none;
+                min-width: 50px;
+                text-align: center;
+            }
+
+            /* 渐变滑块轨道 */
+            .telegraph-speed-slider {
+                -webkit-appearance: none;
+                appearance: none;
+                width: 80px;
+                height: 6px;
+                border-radius: 3px;
+                background: linear-gradient(90deg,
+                    #4facfe 0%,
+                    #00f2fe 25%,
+                    #43e97b 50%,
+                    #f9d423 75%,
+                    #ff6b6b 100%);
+                outline: none;
+                cursor: pointer;
+                box-shadow:
+                    0 2px 10px rgba(79, 172, 254, 0.3),
+                    inset 0 1px 2px rgba(0, 0, 0, 0.1);
+            }
+
+            /* 滑块滑块样式 - Webkit */
+            .telegraph-speed-slider::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                appearance: none;
+                width: 18px;
+                height: 18px;
+                border-radius: 50%;
+                background: linear-gradient(135deg, #fff 0%, #e0e0e0 100%);
+                cursor: pointer;
+                box-shadow:
+                    0 2px 8px rgba(0, 0, 0, 0.3),
+                    inset 0 1px 1px rgba(255, 255, 255, 0.8);
+                transition: all 0.2s ease;
+                border: 2px solid rgba(255, 255, 255, 0.8);
+            }
+
+            .telegraph-speed-slider::-webkit-slider-thumb:hover {
+                transform: scale(1.15);
+                box-shadow:
+                    0 4px 15px rgba(0, 0, 0, 0.3),
+                    0 0 15px rgba(255, 255, 255, 0.5);
+            }
+
+            /* 滑块滑块样式 - Firefox */
+            .telegraph-speed-slider::-moz-range-thumb {
+                width: 18px;
+                height: 18px;
+                border-radius: 50%;
+                background: linear-gradient(135deg, #fff 0%, #e0e0e0 100%);
+                cursor: pointer;
+                box-shadow:
+                    0 2px 8px rgba(0, 0, 0, 0.3),
+                    inset 0 1px 1px rgba(255, 255, 255, 0.8);
+                transition: all 0.2s ease;
+                border: 2px solid rgba(255, 255, 255, 0.8);
+            }
+
+            .telegraph-speed-slider::-moz-range-thumb:hover {
+                transform: scale(1.15);
+            }
+
+            /* 速度提示文字 */
+            .telegraph-speed-hint {
+                font-size: 9px;
+                color: rgba(255, 255, 255, 0.6);
+                letter-spacing: 0.5px;
             }
         `;
         document.head.appendChild(style);
@@ -282,18 +566,18 @@
     function createNavigationButtons() {
         // 注入 CSS 样式
         injectNavigationStyles();
-        
+
         // 创建导航按钮容器
         const navContainer = document.createElement('div');
         navContainer.className = 'telegraph-nav-container';
-        
+
         // ========== 回到顶部按钮 ==========
         const scrollToTopBtn = document.createElement('button');
         scrollToTopBtn.className = 'telegraph-nav-btn';
         scrollToTopBtn.innerHTML = '⬆️';
         scrollToTopBtn.title = '回到顶部';
         scrollToTopBtn.setAttribute('aria-label', '回到顶部');
-        
+
         /**
          * 回到顶部点击事件
          * @description 平滑滚动到页面顶部
@@ -305,14 +589,14 @@
             });
             showToast('已回到顶部', 'info');
         });
-        
+
         // ========== 到达底部按钮 ==========
         const scrollToBottomBtn = document.createElement('button');
         scrollToBottomBtn.className = 'telegraph-nav-btn';
         scrollToBottomBtn.innerHTML = '⬇️';
         scrollToBottomBtn.title = '到达底部';
         scrollToBottomBtn.setAttribute('aria-label', '到达底部');
-        
+
         /**
          * 到达底部点击事件
          * @description 平滑滚动到页面底部
@@ -329,19 +613,299 @@
             });
             showToast('已到达底部', 'info');
         });
-        
+
         // 组装导航容器
         navContainer.appendChild(scrollToTopBtn);
         navContainer.appendChild(scrollToBottomBtn);
-        
+
         // 添加到页面
         document.body.appendChild(navContainer);
     }
 
     // ============================================================================
+    //                    自动滚动功能
+    // ============================================================================
+
+    /**
+     * 自动滚动状态管理
+     */
+    let autoScrollState = {
+        isScrolling: false,
+        speed: 2,// 默认速度 (0-100)
+        animationId: null,// requestAnimationFrame ID
+        direction: 1// 1: 向下, -1: 向上
+    };
+
+    /**
+     * 自动滚动按钮位置状态
+     */
+    let autoScrollPosition = {
+        isMoveMode: false,
+        isDragging: false,
+        startX: 0,
+        startY: 0,
+        startRight: 0,
+        startBottom: 0
+    };
+
+    /**
+     * 创建自动滚动控制器
+     * @description 创建带有玻璃态效果的自动滚动控制面板，包含速度调节滑块
+     */
+    function createAutoScrollController() {
+        // 创建控制器容器
+        const container = document.createElement('div');
+        container.className = 'telegraph-autoscroll-container';
+
+        // ========== 移动模式开关按钮 ==========
+        const moveToggle = document.createElement('button');
+        moveToggle.className = 'telegraph-move-toggle';
+        moveToggle.textContent = '🔘 移动';
+        moveToggle.title = '点击开启/关闭移动模式，开启后可拖拽按钮位置';
+
+        /**
+         * 移动模式开关点击事件
+         * @description 切换移动模式，启用/禁用拖拽功能
+         */
+        moveToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            autoScrollPosition.isMoveMode = !autoScrollPosition.isMoveMode;
+
+            if (autoScrollPosition.isMoveMode) {
+                moveToggle.classList.add('active');
+                moveToggle.textContent = '✅ 移动中';
+                container.classList.add('draggable');
+                showToast('移动模式已开启，可拖拽按钮位置', 'success');
+            } else {
+                moveToggle.classList.remove('active');
+                moveToggle.textContent = '🔘 移动';
+                container.classList.remove('draggable');
+                showToast('移动模式已关闭', 'info');
+            }
+        });
+
+        container.appendChild(moveToggle);
+
+        // ========== 速度控制面板 ==========
+        const speedPanel = document.createElement('div');
+        speedPanel.className = 'telegraph-speed-panel';
+
+        // 速度标签
+        const speedLabel = document.createElement('div');
+        speedLabel.className = 'telegraph-speed-label';
+        speedLabel.textContent = '速度';
+        speedPanel.appendChild(speedLabel);
+
+        // 速度值显示
+        const speedValue = document.createElement('div');
+        speedValue.className = 'telegraph-speed-value';
+        speedValue.textContent = '2';
+        speedPanel.appendChild(speedValue);
+
+        // 渐变滑块
+        const slider = document.createElement('input');
+        slider.type = 'range';
+        slider.min = '1';
+        slider.max = '100';
+        slider.value = '2';
+        slider.className = 'telegraph-speed-slider';
+
+        /**
+         * 滑块值变化事件
+         * @description 实时更新速度显示
+         */
+        slider.addEventListener('input', (e) => {
+            const value = parseInt(e.target.value, 10);
+            autoScrollState.speed = value;
+            speedValue.textContent = value;
+
+            // 速度文本保持黑色，不再根据速度变化颜色
+            speedValue.style.color = '#000';
+        });
+
+        speedPanel.appendChild(slider);
+
+        // 速度提示
+        const speedHint = document.createElement('div');
+        speedHint.className = 'telegraph-speed-hint';
+        speedHint.textContent = '慢 ← → 快';
+        speedPanel.appendChild(speedHint);
+
+        container.appendChild(speedPanel);
+
+        // ========== 主控制按钮 ==========
+        const mainBtn = document.createElement('button');
+        mainBtn.className = 'telegraph-autoscroll-btn';
+        mainBtn.innerHTML = '▶️';
+        mainBtn.title = '自动滚动（点击开始/暂停，悬停调节速度）';
+        mainBtn.setAttribute('aria-label', '自动滚动控制');
+
+        /**
+         * 主按钮点击事件
+         * @description 切换自动滚动状态
+         */
+        mainBtn.addEventListener('click', () => {
+            // 如果处于移动模式，不执行滚动操作
+            if (autoScrollPosition.isMoveMode) return;
+
+            if (autoScrollState.isScrolling) {
+                // 停止滚动
+                stopAutoScroll();
+                mainBtn.classList.remove('active');
+                mainBtn.innerHTML = '▶️';
+                showToast('已停止自动滚动', 'info');
+            } else {
+                // 开始滚动
+                startAutoScroll();
+                mainBtn.classList.add('active');
+                mainBtn.innerHTML = '⏸️';
+                showToast(`自动滚动中 (速度: ${autoScrollState.speed})`, 'success');
+            }
+        });
+
+        /**
+         * 鼠标悬停显示速度面板
+         */
+        mainBtn.addEventListener('mouseenter', () => {
+            speedPanel.classList.add('visible');
+        });
+
+        container.addEventListener('mouseleave', () => {
+            if (!autoScrollState.isScrolling) {
+                speedPanel.classList.remove('visible');
+            }
+        });
+
+        // 滚动时保持速度面板可见
+        if (autoScrollState.isScrolling) {
+            speedPanel.classList.add('visible');
+        }
+
+        container.insertBefore(mainBtn, speedPanel);
+
+        // ========== 拖拽移动功能 ==========
+        /**
+         * 鼠标按下事件 - 开始拖拽
+         */
+        container.addEventListener('mousedown', (e) => {
+            if (!autoScrollPosition.isMoveMode) return;
+
+            e.preventDefault();
+            autoScrollPosition.isDragging = true;
+            autoScrollPosition.startX = e.clientX;
+            autoScrollPosition.startY = e.clientY;
+
+            // 获取当前位置
+            const rect = container.getBoundingClientRect();
+            autoScrollPosition.startRight = window.innerWidth - rect.right;
+            autoScrollPosition.startBottom = window.innerHeight - rect.bottom;
+
+            container.classList.add('dragging');
+        });
+
+        /**
+         * 鼠标移动事件 - 拖拽中
+         */
+        document.addEventListener('mousemove', (e) => {
+            if (!autoScrollPosition.isDragging) return;
+
+            const deltaX = autoScrollPosition.startX - e.clientX;
+            const deltaY = autoScrollPosition.startY - e.clientY;
+
+            let newRight = autoScrollPosition.startRight + deltaX;
+            let newBottom = autoScrollPosition.startBottom + deltaY;
+
+            // 限制在可视区域内
+            const containerRect = container.getBoundingClientRect();
+            const maxRight = window.innerWidth - 50;
+            const maxBottom = window.innerHeight - 50;
+
+            newRight = Math.max(10, Math.min(newRight, maxRight));
+            newBottom = Math.max(10, Math.min(newBottom, maxBottom));
+
+            container.style.right = `${newRight}px`;
+            container.style.bottom = `${newBottom}px`;
+        });
+
+        /**
+         * 鼠标释放事件 - 结束拖拽
+         */
+        document.addEventListener('mouseup', () => {
+            if (autoScrollPosition.isDragging) {
+                autoScrollPosition.isDragging = false;
+                container.classList.remove('dragging');
+            }
+        });
+
+        // 添加到页面
+        document.body.appendChild(container);
+    }
+
+    /**
+     * 开始自动滚动
+     * @description 使用 requestAnimationFrame 实现平滑滚动
+     */
+    function startAutoScroll() {
+        autoScrollState.isScrolling = true;
+
+        /**
+         * 滚动动画帧函数
+         */
+        function scrollStep() {
+            if (!autoScrollState.isScrolling) return;
+
+            // 计算滚动速度（像素/帧）
+            // 速度范围 1-100 映射到 0.5-10 像素/帧
+            const pixelsPerFrame = (autoScrollState.speed / 100) * 10 + 0.5;
+
+            // 获取当前滚动位置
+            const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+            const maxScroll = Math.max(
+                document.documentElement.scrollHeight - window.innerHeight,
+                0
+            );
+
+            // 计算新滚动位置
+            let newScroll = currentScroll + (pixelsPerFrame * autoScrollState.direction);
+
+            // 边界检测 - 到达顶部或底部时反向
+            if (newScroll >= maxScroll) {
+                newScroll = maxScroll;
+                autoScrollState.direction = -1; // 反向向上
+                showToast('已到达底部，反向滚动', 'info');
+            } else if (newScroll <= 0) {
+                newScroll = 0;
+                autoScrollState.direction = 1; // 反向向下
+                showToast('已到达顶部，反向滚动', 'info');
+            }
+
+            // 执行滚动
+            window.scrollTo(0, newScroll);
+
+            // 继续下一帧
+            autoScrollState.animationId = requestAnimationFrame(scrollStep);
+        }
+
+        // 启动滚动
+        autoScrollState.animationId = requestAnimationFrame(scrollStep);
+    }
+
+    /**
+     * 停止自动滚动
+     * @description 取消动画帧并重置状态
+     */
+    function stopAutoScroll() {
+        autoScrollState.isScrolling = false;
+        if (autoScrollState.animationId) {
+            cancelAnimationFrame(autoScrollState.animationId);
+            autoScrollState.animationId = null;
+        }
+    }
+
+    // ============================================================================
     //                    移除简介功能
     // ============================================================================
-    
+
     /**
      * 移除已添加的简介信息
      * @description 移除带有 INTRO_MARKER 标记的段落，以及符合简介格式的段落
@@ -355,14 +919,14 @@
         }
 
         let removedCount = 0;
-        
+
         // 方法1：移除带有标记的简介段落
         const markedElements = editor.querySelectorAll(`[${INTRO_MARKER}]`);
         markedElements.forEach(el => {
             el.remove();
             removedCount++;
         });
-        
+
         // 方法2：移除符合简介格式的段落（兼容旧版本添加的简介）
         // 简介格式：标题：xxx、作者：xxx、原链接：xxx、原文：xxx、发布日期：xxx
         const introPatterns = [
@@ -372,7 +936,7 @@
             /^原文[：:]/,
             /^发布日期[：:]/
         ];
-        
+
         editor.querySelectorAll('p').forEach(p => {
             const text = p.textContent.trim();
             // 检查是否匹配简介格式
@@ -381,23 +945,23 @@
                 removedCount++;
             }
         });
-        
+
         // 清理简介后面跟着的空br
         let prevWasIntro = false;
         editor.querySelectorAll('br').forEach(br => {
             const parent = br.parentElement;
             if (!parent) return;
-            
+
             // 如果前一个元素是被移除的简介，移除这个br
             if (prevWasIntro && (!br.previousSibling || !br.previousSibling.textContent?.trim())) {
                 br.remove();
             }
             prevWasIntro = false;
         });
-        
+
         // 清理可能残留的空行
         clearEmptyLines();
-        
+
         if (removedCount > 0) {
             showToast(`已移除 ${removedCount} 条简介信息`, 'success');
         } else {
@@ -408,7 +972,7 @@
     // ============================================================================
     //                    清空所有内容功能
     // ============================================================================
-    
+
     /**
      * 清空编辑器所有内容
      * @description 弹出确认对话框后清空编辑器
@@ -420,23 +984,23 @@
             showToast('未找到编辑器', 'error');
             return;
         }
-        
+
         // 检查编辑器是否有内容
         if (!editor.textContent.trim() && !editor.querySelector('img, figure, iframe, video, a')) {
             showToast('编辑器已经是空的', 'info');
             return;
         }
-        
+
         // 弹出确认对话框
         if (confirm('⚠️ 确定要清空所有内容吗？\n\n此操作不可撤销！')) {
             // 保留编辑器元素，清空内容
             editor.innerHTML = '';
-            
+
             // 创建一个空段落，保持编辑器可编辑状态
             const placeholder = document.createElement('p');
             placeholder.innerHTML = '<br>';
             editor.appendChild(placeholder);
-            
+
             showToast('已清空所有内容', 'success');
         }
     }
@@ -444,7 +1008,7 @@
     // ============================================================================
     //                    Toast 提示功能
     // ============================================================================
-    
+
     /**
      * 显示Toast提示消息
      * @param {string} message - 提示消息
@@ -456,19 +1020,19 @@
         if (existingToast) {
             existingToast.remove();
         }
-        
+
         // 创建toast元素
         const toast = document.createElement('div');
         toast.id = 'telegraph-tool-toast';
         toast.textContent = message;
-        
+
         // 根据类型设置颜色
         const colors = {
             success: '#4caf50',
             error: '#f44336',
             info: '#2196f3'
         };
-        
+
         Object.assign(toast.style, {
             position: 'fixed',
             top: '50%',
@@ -485,14 +1049,14 @@
             opacity: '0',
             transition: 'opacity 0.3s ease'
         });
-        
+
         document.body.appendChild(toast);
-        
+
         // 淡入动画
         requestAnimationFrame(() => {
             toast.style.opacity = '1';
         });
-        
+
         // 自动消失
         setTimeout(() => {
             toast.style.opacity = '0';
@@ -503,7 +1067,7 @@
     // ============================================================================
     //                    2. 输入框（粘贴链接）
     // ============================================================================
-    
+
     /**
      * 显示图片链接输入面板
      * @description 创建模态对话框，允许用户粘贴多行图片链接
@@ -571,7 +1135,7 @@
         confirmBtn.textContent = '✅ 确认并排序';
         styleBtn(confirmBtn);
         confirmBtn.style.background = '#4caf50';
-        
+
         /**
          * 确认按钮点击事件处理
          * @description 解析用户输入，提取有效图片链接
@@ -582,14 +1146,14 @@
             imageLinks = textarea.value.split('\n')
                 .map(line => line.trim())
                 .filter(line => line && /^https?:\/\/.*\.(jpe?g|png|webp|gif|bmp)$/i.test(line));
-            
+
             overlay.remove();
-            
+
             if (imageLinks.length === 0) {
                 showToast('未检测到有效的图片链接', 'error');
                 return;
             }
-            
+
             showSortBox();
         };
 
@@ -610,7 +1174,7 @@
     // ============================================================================
     //                    3. 拖拽排序预览框
     // ============================================================================
-    
+
     /**
      * 显示图片排序面板
      * @description 创建可拖拽排序的图片预览界面
@@ -767,7 +1331,7 @@
     // ============================================================================
     //                    4. 插入图片到编辑器
     // ============================================================================
-    
+
     /**
      * 将图片插入到 Telegraph 编辑器
      * @param {string[]} links - 要插入的图片URL数组
@@ -825,7 +1389,7 @@
     // ============================================================================
     //                    5. 清除空行
     // ============================================================================
-    
+
     /**
      * 清除编辑器中的空行
      * @description 移除空的段落和多余的换行符
@@ -864,7 +1428,7 @@
     // ============================================================================
     //                    6. 简介面板 – 带标签插入
     // ============================================================================
-    
+
     /**
      * 显示简介信息输入面板
      * @description 创建表单让用户输入文章标题、作者、来源等信息
@@ -1065,7 +1629,7 @@
     // ============================================================================
     //                           辅助函数
     // ============================================================================
-    
+
     /**
      * 统一设置按钮样式的辅助函数
      * @param {HTMLElement} btn - 要设置样式的按钮元素
@@ -1085,13 +1649,16 @@
     // ============================================================================
     //                           初始化
     // ============================================================================
-    
+
     // 创建工具栏
     createToolbar();
-    
+
     // 创建导航按钮（回到顶部/到达底部）
     createNavigationButtons();
-    
+
+    // 创建自动滚动控制器
+    createAutoScrollController();
+
     // 输出加载成功日志
-    console.log('Telegraph 批量插入 & 简介工具 v2.0 已加载');
+    console.log('Telegraph 批量插入 & 简介工具已加载');
 })();
