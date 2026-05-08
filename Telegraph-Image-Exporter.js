@@ -6,6 +6,7 @@
 // @author       winterkingdom
 // @source       https://github.com/youkk425/telegraphGreasyFork
 // @match        *://telegra.ph/*
+// @require      file:///E:/GithubProject/telegraphGreasyFork/advanced-styles.js
 // @require      https://cdn.jsdelivr.net/npm/jszip@3.7.1/dist/jszip.min.js
 // @grant        none
 // @license      MIT
@@ -16,64 +17,10 @@
 (function () {
     'use strict';
 
-    // 注入按钮动画样式
-    function injectStyles() {
-        const style = document.createElement('style');
-        style.textContent = `
-            /* 按钮基础样式 */
-            .telegraph-export-btn {
-                margin-left: 8px;
-                padding: 6px 14px;
-                border-radius: 6px;
-                cursor: pointer;
-                border: none;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: #fff;
-                font-size: 13px;
-                font-weight: 500;
-                box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
-                transition: all 0.3s ease;
-                position: relative;
-                overflow: hidden;
-            }
-
-            /* 按钮悬停渐变色变化 */
-            .telegraph-export-btn:hover {
-                background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-                box-shadow: 0 4px 15px rgba(240, 147, 251, 0.5);
-                transform: translateY(-2px);
-            }
-
-            /* 晃动动画 */
-            @keyframes shake {
-                0%, 100% { transform: translateX(0) rotate(0deg); }
-                10% { transform: translateX(-2px) rotate(-1deg); }
-                20% { transform: translateX(2px) rotate(1deg); }
-                30% { transform: translateX(-2px) rotate(-1deg); }
-                40% { transform: translateX(2px) rotate(1deg); }
-                50% { transform: translateX(-1px) rotate(0deg); }
-                60% { transform: translateX(1px) rotate(0deg); }
-                70% { transform: translateX(-1px) rotate(0deg); }
-                80% { transform: translateX(1px) rotate(0deg); }
-                90% { transform: translateX(-1px) rotate(0deg); }
-            }
-
-            /* 悬停时触发晃动 */
-            .telegraph-export-btn:hover {
-                animation: shake 0.6s ease-in-out;
-            }
-
-            /* 点击反馈 */
-            .telegraph-export-btn:active {
-                transform: translateY(0) scale(0.96);
-                box-shadow: 0 2px 5px rgba(102, 126, 234, 0.3);
-            }
-        `;
-        document.head.appendChild(style);
+    // 注入高级样式
+    if (window.TelegraphAdvancedStyles) {
+        window.TelegraphAdvancedStyles.inject();
     }
-
-    // 页面加载时注入样式
-    injectStyles();
 
     // 等待页面头部加载
     const timer = setInterval(() => {
@@ -86,25 +33,42 @@
 
     // 初始化界面按钮
     function initUI(container) {
-        const createBtn = (text, handler) => {
+        const createBtn = (text, handler, color = 'var(--tg-primary)') => {
             const btn = document.createElement('button');
+            btn.className = 'telegraph-btn';
             btn.textContent = text;
-            btn.className = 'telegraph-export-btn';
+            btn.style.background = `linear-gradient(135deg, ${color}, ${adjustColor(color, -20)})`;
+            btn.style.padding = '8px 16px';
+            btn.style.fontSize = '14px';
+
+            // 波纹效果
+            btn.addEventListener('click', function(e) {
+                const ripple = document.createElement('span');
+                ripple.className = 'telegraph-btn-ripple';
+                const rect = btn.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                ripple.style.width = ripple.style.height = size + 'px';
+                ripple.style.left = e.clientX - rect.left - size / 2 + 'px';
+                ripple.style.top = e.clientY - rect.top - size / 2 + 'px';
+                btn.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 600);
+            });
+
             btn.addEventListener('click', handler);
             return btn;
         };
 
         // 直接添加功能按钮
-        container.appendChild(createBtn('导出TXT', exportTxt));
-        container.appendChild(createBtn('导出MD', exportMd));
-        container.appendChild(createBtn('打包ZIP', packZip));
+        container.appendChild(createBtn('📋 导出TXT', exportTxt, '#667eea'));
+        container.appendChild(createBtn('📝 导出MD', exportMd, '#764ba2'));
+        container.appendChild(createBtn('📦 打包ZIP', packZip, '#f093fb'));
     }
 
     // 获取图片列表
     function getImages() {
         const imgs = document.querySelectorAll('.ql-editor img');
         if (!imgs.length) {
-            alert('当前页面未找到图片');
+            showToast('当前页面未找到图片', 'error');
             return null;
         }
         return Array.from(imgs);
@@ -125,6 +89,7 @@
         if (!imgs) return;
         const content = imgs.map(i => i.src).join('\n');
         downloadFile(content, `${document.title}.txt`);
+        showToast('✓ 导出TXT成功', 'success');
     }
 
     // 功能：导出Markdown
@@ -134,6 +99,7 @@
         const title = document.title.trim();
         const content = `# ${title}\n\n` + imgs.map(i => `![](${i.src})`).join('\n\n');
         downloadFile(content, `${title}.md`);
+        showToast('✓ 导出Markdown成功', 'success');
     }
 
     // 功能：极速打包下载 (并行下载优化)
@@ -142,28 +108,51 @@
         if (!imgs) return;
 
         if (typeof JSZip === 'undefined') {
-            alert('打包组件加载失败，请刷新页面重试');
+            showToast('打包组件加载失败，请刷新页面重试', 'error');
             return;
         }
 
         const zip = new JSZip();
         const folder = zip.folder(document.title.trim() || 'images');
 
-        // 创建状态提示框
+        // 创建状态提示框 - 使用玻璃态
         const status = document.createElement('div');
-        // 使用模板字符串分行定义样式，提高可读性
+        status.className = 'telegraph-modal';
         status.style.cssText = `
             position: fixed;
-            top: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.8);
-            color: #fff;
-            padding: 10px 15px;
-            border-radius: 5px;
-            z-index: 9999;
-            font-size: 14px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            min-width: 300px;
+            z-index: 10000;
         `;
-        document.body.appendChild(status);
+
+        const title = document.createElement('h3');
+        title.textContent = '正在下载图片...';
+        title.style.margin = '0 0 15px';
+        title.style.textAlign = 'center';
+        status.appendChild(title);
+
+        const progressContainer = document.createElement('div');
+        progressContainer.className = 'telegraph-progress-bar';
+        const progressFill = document.createElement('div');
+        progressFill.className = 'telegraph-progress-fill';
+        progressFill.style.width = '0%';
+        progressContainer.appendChild(progressFill);
+        status.appendChild(progressContainer);
+
+        const countText = document.createElement('div');
+        countText.style.textAlign = 'center';
+        countText.style.marginTop = '10px';
+        countText.style.fontSize = '14px';
+        countText.style.color = '#666';
+        countText.textContent = '0 / 0';
+        status.appendChild(countText);
+
+        const overlay = document.createElement('div');
+        overlay.className = 'telegraph-modal-overlay';
+        overlay.appendChild(status);
+        document.body.appendChild(overlay);
 
         let count = 0;
         const total = imgs.length;
@@ -173,22 +162,22 @@
             try {
                 const response = await fetch(img.src);
                 const blob = await response.blob();
-                // 提取扩展名，默认webp
                 const ext = img.src.split('.').pop().split(/#|\?/)[0] || 'webp';
                 folder.file(`image_${index + 1}.${ext}`, blob);
             } catch (e) {
                 console.error(`图片 ${index + 1} 下载失败`, e);
             } finally {
-                // 更新进度
                 count++;
-                status.textContent = `正在下载 ${count}/${total}...`;
+                const progress = (count / total) * 100;
+                progressFill.style.width = `${progress}%`;
+                countText.textContent = `${count} / ${total}`;
             }
         });
 
         // 等待所有下载任务完成
         await Promise.all(tasks);
 
-        status.textContent = '正在生成压缩包...';
+        title.textContent = '正在生成压缩包...';
 
         try {
             const content = await zip.generateAsync({ type: 'blob' });
@@ -197,12 +186,56 @@
             link.download = `${document.title.trim()}.zip`;
             link.click();
             URL.revokeObjectURL(link.href);
+
+            // 成功动画
+            showToast('✓ 打包完成，开始下载', 'success');
         } catch (e) {
             console.error(e);
-            alert('打包失败');
+            showToast('✕ 打包失败', 'error');
         } finally {
-            status.remove();
+            // 淡出动画
+            overlay.classList.add('hiding');
+            setTimeout(() => overlay.remove(), 200);
         }
+    }
+
+    // Toast 提示函数
+    function showToast(message, type = 'info') {
+        const existingToast = document.querySelector('.telegraph-toast');
+        if (existingToast) {
+            existingToast.remove();
+        }
+
+        const toast = document.createElement('div');
+        toast.className = `telegraph-toast ${type}`;
+
+        const icon = document.createElement('span');
+        icon.className = 'telegraph-toast-icon';
+        icon.textContent = type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ';
+        toast.appendChild(icon);
+
+        const msg = document.createElement('span');
+        msg.textContent = message;
+        toast.appendChild(msg);
+
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.classList.add('hiding');
+            setTimeout(() => toast.remove(), 300);
+        }, 2500);
+    }
+
+    // 辅助函数：调整颜色亮度
+    function adjustColor(color, percent) {
+        const num = parseInt(color.replace('#', ''), 16);
+        const amt = Math.round(2.55 * percent);
+        const R = (num >> 16) + amt;
+        const G = (num >> 8 & 0x00FF) + amt;
+        const B = (num & 0x0000FF) + amt;
+        return '#' + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+            (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+            (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
     }
 
 })();

@@ -9,6 +9,7 @@
 // @match        https://telegra.ph/*
 // @grant        none
 // @require      https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js
+// @require      file:///E:/GithubProject/telegraphGreasyFork/advanced-styles.js
 // ==/UserScript==
 
 /* global Sortable */
@@ -44,7 +45,14 @@
     'use strict';
 
     // ============================================================================
-    //                           全局变量声明
+    //                    注入高级样式
+    // ============================================================================
+    if (window.TelegraphAdvancedStyles) {
+        window.TelegraphAdvancedStyles.inject();
+    }
+
+    // ============================================================================
+    //                    全局变量声明
     // ============================================================================
 
     /**
@@ -75,22 +83,12 @@
 
     /**
      * 创建主工具栏面板
-     * @description 采用分组设计，将功能按钮按类别分组
+     * @description 采用分组设计，将功能按钮按类别分组，使用 CSS 类进行样式控制
      */
     function createToolbar() {
         // 创建工具栏容器
         const toolbar = document.createElement('div');
-        toolbar.id = 'telegraph-tool-toolbar';
-        Object.assign(toolbar.style, {
-            position: 'fixed',
-            top: '10px',
-            left: '10px',
-            zIndex: '9999',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '8px',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-        });
+        toolbar.className = 'telegraph-toolbar';
 
         // ========== 图片操作组 ==========
         const imageGroup = createButtonGroup('🖼️ 图片操作', '#4caf50');
@@ -132,28 +130,13 @@
      */
     function createButtonGroup(title, color) {
         const group = document.createElement('div');
-        Object.assign(group.style, {
-            background: 'rgba(255, 255, 255, 0.95)',
-            borderRadius: '8px',
-            padding: '8px',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '6px',
-            minWidth: '140px'
-        });
+        group.className = 'telegraph-toolbar-group';
 
         // 分组标题
         const groupTitle = document.createElement('div');
+        groupTitle.className = 'telegraph-toolbar-title';
         groupTitle.textContent = title;
-        Object.assign(groupTitle.style, {
-            fontSize: '11px',
-            fontWeight: 'bold',
-            color: color,
-            padding: '2px 4px',
-            borderBottom: `1px solid ${color}33`,
-            marginBottom: '2px'
-        });
+        groupTitle.style.color = color;
         group.appendChild(groupTitle);
 
         return group;
@@ -168,35 +151,44 @@
      */
     function createButton(text, bgColor, clickHandler) {
         const btn = document.createElement('button');
+        btn.className = 'telegraph-btn';
         btn.textContent = text;
-        Object.assign(btn.style, {
-            padding: '8px 12px',
-            background: bgColor,
-            color: 'white',
-            border: 'none',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: '13px',
-            fontWeight: 'bold',
-            transition: 'all 0.2s ease',
-            whiteSpace: 'nowrap',
-            textAlign: 'left'
-        });
+        btn.style.background = `linear-gradient(135deg, ${bgColor}, ${adjustColor(bgColor, -20)})`;
 
-        // 鼠标悬停效果
-        btn.addEventListener('mouseenter', () => {
-            btn.style.transform = 'translateX(3px)';
-            btn.style.boxShadow = '0 2px 6px rgba(0,0,0,0.2)';
-        });
-        btn.addEventListener('mouseleave', () => {
-            btn.style.transform = 'translateX(0)';
-            btn.style.boxShadow = 'none';
+        // 波纹效果
+        btn.addEventListener('click', function(e) {
+            const ripple = document.createElement('span');
+            ripple.className = 'telegraph-btn-ripple';
+            const rect = btn.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = e.clientX - rect.left - size / 2 + 'px';
+            ripple.style.top = e.clientY - rect.top - size / 2 + 'px';
+            btn.appendChild(ripple);
+            setTimeout(() => ripple.remove(), 600);
         });
 
         // 绑定点击事件
         btn.addEventListener('click', clickHandler);
 
         return btn;
+    }
+
+    /**
+     * 辅助函数：调整颜色亮度
+     * @param {string} color - 十六进制颜色值 (如 #4caf50)
+     * @param {number} percent - 调整百分比 (负数变暗，正数变亮)
+     * @returns {string} 调整后的十六进制颜色
+     */
+    function adjustColor(color, percent) {
+        const num = parseInt(color.replace('#', ''), 16);
+        const amt = Math.round(2.55 * percent);
+        const R = (num >> 16) + amt;
+        const G = (num >> 8 & 0x00FF) + amt;
+        const B = (num & 0x0000FF) + amt;
+        return '#' + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+            (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+            (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
     }
 
     // ============================================================================
@@ -1010,7 +1002,7 @@
     // ============================================================================
 
     /**
-     * 显示Toast提示消息
+     * 显示 Toast 提示消息
      * @param {string} message - 提示消息
      * @param {string} type - 类型：'success' | 'error' | 'info'
      */
@@ -1024,44 +1016,26 @@
         // 创建toast元素
         const toast = document.createElement('div');
         toast.id = 'telegraph-tool-toast';
-        toast.textContent = message;
+        toast.className = `telegraph-toast ${type}`;
 
-        // 根据类型设置颜色
-        const colors = {
-            success: '#4caf50',
-            error: '#f44336',
-            info: '#2196f3'
-        };
+        // 添加图标
+        const icon = document.createElement('span');
+        icon.className = 'telegraph-toast-icon';
+        icon.textContent = type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ';
+        toast.appendChild(icon);
 
-        Object.assign(toast.style, {
-            position: 'fixed',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            background: colors[type] || colors.info,
-            color: 'white',
-            padding: '16px 28px',
-            borderRadius: '8px',
-            fontSize: '15px',
-            fontWeight: 'bold',
-            zIndex: '100000',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-            opacity: '0',
-            transition: 'opacity 0.3s ease'
-        });
+        // 添加消息
+        const msg = document.createElement('span');
+        msg.textContent = message;
+        toast.appendChild(msg);
 
         document.body.appendChild(toast);
 
-        // 淡入动画
-        requestAnimationFrame(() => {
-            toast.style.opacity = '1';
-        });
-
         // 自动消失
         setTimeout(() => {
-            toast.style.opacity = '0';
+            toast.classList.add('hiding');
             setTimeout(() => toast.remove(), 300);
-        }, 2000);
+        }, 2500);
     }
 
     // ============================================================================
@@ -1070,65 +1044,34 @@
 
     /**
      * 显示图片链接输入面板
-     * @description 创建模态对话框，允许用户粘贴多行图片链接
+     * @description 创建模态对话框，允许用户粘贴多行图片链接，使用 CSS 类进行样式控制
      * @security 该函数创建了模态遮罩层，但需要验证用户输入的URL
      */
     function showInputBox() {
         // 创建半透明遮罩层
         const overlay = document.createElement('div');
-        Object.assign(overlay.style, {
-            position: 'fixed',
-            inset: '0',
-            background: 'rgba(0,0,0,0.5)',
-            zIndex: '10000',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center'
-        });
+        overlay.className = 'telegraph-modal-overlay';
 
         // 创建对话框容器
         const box = document.createElement('div');
-        Object.assign(box.style, {
-            background: '#fff',
-            padding: '25px',
-            borderRadius: '10px',
-            width: '500px',
-            maxWidth: '90vw',
-            boxShadow: '0 6px 20px rgba(0,0,0,0.4)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center'
-        });
+        box.className = 'telegraph-modal';
 
         // 创建标题
         const title = document.createElement('h3');
         title.textContent = '批量插入图床图片链接';
-        title.style.marginBottom = '15px';
         box.appendChild(title);
 
         // 创建多行文本输入框
         const textarea = document.createElement('textarea');
         textarea.placeholder = '每行一个图片直链（jpg/png/webp/gif 等）';
-        Object.assign(textarea.style, {
-            width: '100%',
-            height: '220px',
-            marginBottom: '15px',
-            padding: '12px',
-            fontSize: '14px',
-            border: '1px solid #ddd',
-            borderRadius: '6px',
-            resize: 'vertical'
-        });
         box.appendChild(textarea);
 
         // 创建按钮容器
         const buttonRow = document.createElement('div');
-        Object.assign(buttonRow.style, {
-            display: 'flex',
-            justifyContent: 'space-between',
-            width: '100%',
-            gap: '10px'
-        });
+        buttonRow.style.display = 'flex';
+        buttonRow.style.justifyContent = 'space-between';
+        buttonRow.style.width = '100%';
+        buttonRow.style.gap = '10px';
 
         // 创建确认按钮
         const confirmBtn = document.createElement('button');
@@ -1162,13 +1105,24 @@
         cancelBtn.textContent = '取消';
         styleBtn(cancelBtn);
         cancelBtn.style.background = '#f44336'; // 红色背景
-        cancelBtn.onclick = () => overlay.remove();
+        cancelBtn.onclick = () => {
+            overlay.classList.add('hiding');
+            setTimeout(() => overlay.remove(), 200);
+        };
 
         buttonRow.appendChild(confirmBtn);
         buttonRow.appendChild(cancelBtn);
         box.appendChild(buttonRow);
         overlay.appendChild(box);
         document.body.appendChild(overlay);
+
+        // 点击遮罩层关闭
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.classList.add('hiding');
+                setTimeout(() => overlay.remove(), 200);
+            }
+        });
     }
 
     // ============================================================================
@@ -1177,39 +1131,22 @@
 
     /**
      * 显示图片排序面板
-     * @description 创建可拖拽排序的图片预览界面
+     * @description 创建可拖拽排序的图片预览界面，使用 CSS 类进行样式控制
      * @security 【高风险】直接将用户输入的URL设置为img.src
      */
     function showSortBox() {
         const overlay = document.createElement('div');
-        Object.assign(overlay.style, {
-            position: 'fixed',
-            inset: '0',
-            background: 'rgba(0,0,0,0.5)',
-            zIndex: '10000',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center'
-        });
+        overlay.className = 'telegraph-modal-overlay';
 
         const box = document.createElement('div');
-        Object.assign(box.style, {
-            background: '#fff',
-            padding: '20px',
-            borderRadius: '10px',
-            width: '860px',
-            maxWidth: '95vw',
-            maxHeight: '88vh',
-            overflow: 'auto',
-            boxShadow: '0 8px 25px rgba(0,0,0,0.35)',
-            display: 'flex',
-            flexDirection: 'column'
-        });
+        box.className = 'telegraph-modal';
+        box.style.width = '860px';
+        box.style.maxWidth = '95vw';
+        box.style.maxHeight = '88vh';
+        box.style.overflow = 'auto';
 
         const title = document.createElement('h3');
         title.textContent = `拖拽排序图片（共 ${imageLinks.length} 张）`;
-        title.style.marginBottom = '10px';
-        title.style.textAlign = 'center';
         box.appendChild(title);
 
         const hint = document.createElement('p');
@@ -1221,39 +1158,33 @@
         box.appendChild(hint);
 
         const sortableContainer = document.createElement('div');
-        Object.assign(sortableContainer.style, {
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: '12px',
-            padding: '15px',
-            background: '#f8f9fa',
-            border: '2px dashed #ccc',
-            borderRadius: '8px',
-            minHeight: '320px'
-        });
+        sortableContainer.style.display = 'flex';
+        sortableContainer.style.flexWrap = 'wrap';
+        sortableContainer.style.gap = '12px';
+        sortableContainer.style.padding = '15px';
+        sortableContainer.style.background = '#f8f9fa';
+        sortableContainer.style.border = '2px dashed #ccc';
+        sortableContainer.style.borderRadius = '8px';
+        sortableContainer.style.minHeight = '320px';
 
         imageLinks.forEach((link, i) => {
             const item = document.createElement('div');
             item.dataset.url = link;
-            Object.assign(item.style, {
-                width: '160px',
-                cursor: 'move',
-                border: '2px solid #ddd',
-                borderRadius: '6px',
-                padding: '6px',
-                background: '#fff',
-                textAlign: 'center',
-                transition: 'all 0.2s'
-            });
+            item.style.width = '160px';
+            item.style.cursor = 'move';
+            item.style.border = '2px solid #ddd';
+            item.style.borderRadius = '6px';
+            item.style.padding = '6px';
+            item.style.background = '#fff';
+            item.style.textAlign = 'center';
+            item.style.transition = 'all 0.2s';
 
             const img = document.createElement('img');
             img.src = link;
-            Object.assign(img.style, {
-                maxWidth: '100%',
-                maxHeight: '140px',
-                objectFit: 'contain',
-                borderRadius: '4px'
-            });
+            img.style.maxWidth = '100%';
+            img.style.maxHeight = '140px';
+            img.style.objectFit = 'contain';
+            img.style.borderRadius = '4px';
             img.onerror = () => {
                 item.style.opacity = '0.45';
                 item.title = '图片加载失败';
@@ -1281,12 +1212,10 @@
         });
 
         const buttonRow = document.createElement('div');
-        Object.assign(buttonRow.style, {
-            display: 'flex',
-            justifyContent: 'space-between',
-            marginTop: '20px',
-            gap: '12px'
-        });
+        buttonRow.style.display = 'flex';
+        buttonRow.style.justifyContent = 'space-between';
+        buttonRow.style.marginTop = '20px';
+        buttonRow.style.gap = '12px';
 
         const clearAllBtn = document.createElement('button');
         clearAllBtn.textContent = '全部清空列表';
@@ -1295,7 +1224,8 @@
         clearAllBtn.onclick = () => {
             if (confirm('确定清空当前图片列表？（不影响已插入内容）')) {
                 imageLinks = [];
-                overlay.remove();
+                overlay.classList.add('hiding');
+                setTimeout(() => overlay.remove(), 200);
                 showToast('已清空图片列表', 'success');
             }
         };
@@ -1309,15 +1239,21 @@
             sortedLinks = Array.from(sortableContainer.children)
                 .map(item => item.dataset.url)
                 .filter(Boolean);
-            overlay.remove();
-            insertImages(sortedLinks);
+            overlay.classList.add('hiding');
+            setTimeout(() => {
+                overlay.remove();
+                insertImages(sortedLinks);
+            }, 200);
         };
 
         const cancelBtn = document.createElement('button');
         cancelBtn.textContent = '取消';
         styleBtn(cancelBtn);
         cancelBtn.style.background = '#f44336'; // 红色背景
-        cancelBtn.onclick = () => overlay.remove();
+        cancelBtn.onclick = () => {
+            overlay.classList.add('hiding');
+            setTimeout(() => overlay.remove(), 200);
+        };
 
         buttonRow.appendChild(clearAllBtn);
         buttonRow.appendChild(confirmBtn);
@@ -1326,6 +1262,14 @@
 
         overlay.appendChild(box);
         document.body.appendChild(overlay);
+
+        // 点击遮罩层关闭
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.classList.add('hiding');
+                setTimeout(() => overlay.remove(), 200);
+            }
+        });
     }
 
     // ============================================================================
@@ -1431,35 +1375,20 @@
 
     /**
      * 显示简介信息输入面板
-     * @description 创建表单让用户输入文章标题、作者、来源等信息
+     * @description 创建表单让用户输入文章标题、作者、来源等信息，使用 CSS 类进行样式控制
      * @security 【中等风险】用户输入的链接直接设置为 a.href
      */
     function showIntroPanel() {
         const overlay = document.createElement('div');
-        Object.assign(overlay.style, {
-            position: 'fixed',
-            inset: '0',
-            background: 'rgba(0,0,0,0.5)',
-            zIndex: '10000',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center'
-        });
+        overlay.className = 'telegraph-modal-overlay';
 
         const panel = document.createElement('div');
-        Object.assign(panel.style, {
-            background: '#fff',
-            padding: '24px',
-            borderRadius: '10px',
-            width: '420px',
-            maxWidth: '90vw',
-            boxShadow: '0 8px 30px rgba(0,0,0,0.3)'
-        });
+        panel.className = 'telegraph-modal';
+        panel.style.width = '420px';
+        panel.style.maxWidth = '90vw';
 
         const titleEl = document.createElement('h3');
         titleEl.textContent = '快速插入简介信息（带标签）';
-        titleEl.style.margin = '0 0 20px';
-        titleEl.style.textAlign = 'center';
         panel.appendChild(titleEl);
 
         const fields = [
@@ -1496,15 +1425,8 @@
                 const input = document.createElement('input');
                 input.type = 'text';
                 input.placeholder = f.placeholder;
-                Object.assign(input.style, {
-                    width: '100%',
-                    padding: '10px',
-                    fontSize: '14px',
-                    border: '1px solid #ddd',
-                    borderRadius: '6px'
-                });
-                inputs[f.key] = input;
                 row.appendChild(input);
+                inputs[f.key] = input;
             }
 
             panel.appendChild(row);
@@ -1600,7 +1522,8 @@
                 editor.appendChild(frag);
             }
 
-            overlay.remove();
+            overlay.classList.add('hiding');
+            setTimeout(() => overlay.remove(), 200);
             showToast('简介已添加', 'success');
             setTimeout(clearEmptyLines, 400);
         };
@@ -1616,7 +1539,10 @@
             fontWeight: 'bold',
             cursor: 'pointer'
         });
-        cancel.onclick = () => overlay.remove();
+        cancel.onclick = () => {
+            overlay.classList.add('hiding');
+            setTimeout(() => overlay.remove(), 200);
+        };
 
         btnRow.appendChild(confirm);
         btnRow.appendChild(cancel);
@@ -1624,6 +1550,14 @@
 
         overlay.appendChild(panel);
         document.body.appendChild(overlay);
+
+        // 点击遮罩层关闭
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.classList.add('hiding');
+                setTimeout(() => overlay.remove(), 200);
+            }
+        });
     }
 
     // ============================================================================
