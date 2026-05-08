@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Telegraph 图片导出工具 (轻量极速重构版)
 // @namespace    https://telegra.ph
-// @version      1.0
+// @version      1.1
 // @description  轻量级导出图片链接、Markdown，极速并行打包下载ZIP
 // @author       winterkingdom
 // @source       https://github.com/youkk425/telegraphGreasyFork

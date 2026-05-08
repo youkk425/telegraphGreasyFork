@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         【免费完整版】Telegraph 批量插入图床图片链接 + 简介工具
 // @namespace    github.com/youkk425
-// @version      2.2
+// @version      2.3
 // @description  批量插入图床图片链接 + 拖拽排序 + 一键清空列表 + 清除空行 + 快速添加带标签的简介信息+ 新增移除简介和清空内容功能+返回顶部按钮
 // @author       重写版（基于原脚本功能）
 // @source       https://github.com/youkk425/telegraphGreasyFork
