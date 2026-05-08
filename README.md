@@ -4,10 +4,10 @@
 
 Telegra.ph 编辑器增强脚本集 — 批量插入图片、拖拽排序、导出打包，一站式提升创作效率
 
-[![telegraph.js](https://img.shields.io/badge/telegraph.js-v2.2-blue.svg)](https://greasyfork.org/zh-CN/scripts/570416)
-[![Exporter](https://img.shields.io/badge/Exporter-v1.0-9cf.svg)](https://greasyfork.org/zh-CN/scripts/570515)
+[![telegraph.js](https://img.shields.io/badge/telegraph.js-v2.3.2-blue.svg)](https://greasyfork.org/zh-CN/scripts/570416)
+[![Exporter](https://img.shields.io/badge/Exporter-v1.1.1-9cf.svg)](https://greasyfork.org/zh-CN/scripts/570515)
 [![Platform](https://img.shields.io/badge/platform-Tampermonkey-orange.svg)](https://www.tampermonkey.net/)
-[![License](https://img.shields.io/badge/license-GPLv3-green.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-Mixed-green.svg)](LICENSE)
 
 </div>
 
@@ -35,6 +35,8 @@ Telegra.ph 编辑器增强脚本集 — 批量插入图片、拖拽排序、导�
 | 📋 导出 TXT | 一键导出所有图片链接为纯文本 |
 | 📝 导出 Markdown | 生成包含标题和图片引用的 Markdown 文档 |
 | 🗜️ 打包 ZIP | 并行下载所有图片并打包为 ZIP（Promise.all），实时进度显示 |
+| 🎯 居中下载窗口 | 所有导出操作使用居中弹窗显示进度 |
+| ❌ 取消操作 | 支持随时取消导出/打包操作 |
 
 ## 📸 效果预览
 
@@ -83,18 +85,18 @@ Telegra.ph 编辑器增强脚本集 — 批量插入图片、拖拽排序、导�
 ### Telegraph-Image-Exporter.js
 
 1. 打开包含图片的 Telegraph 文章页面
-2. 页面左侧出现导出按钮组
+2. 页面头部地址栏旁边出现导出按钮组
 3. 选择导出方式：
-   - **TXT** — 导出纯文本图片链接列表
-   - **Markdown** — 生成带标题和图片引用的 MD 文件
-   - **ZIP** — 并行下载图片并打包（显示实时进度）
+   - **TXT** — 导出纯文本图片链接列表（带居中下载窗口）
+   - **Markdown** — 生成带标题和图片引用的 MD 文件（带居中下载窗口）
+   - **ZIP** — 并行下载图片并打包（显示实时进度，支持取消）
 
 ## 📁 项目结构
 
 ```
 telegraphGreasyFork/
-├── telegraph.js                    # 主增强脚本 v2.2 (LGPL-3.0)
-├── Telegraph-Image-Exporter.js     # 图片导出工具 v1.0 (MIT)
+├── telegraph.js                    # 主增强脚本 v2.3.2 (LGPL-3.0)
+├── Telegraph-Image-Exporter.js     # 图片导出工具 v1.1.1 (MIT)
 ├── advanced-styles.js              # 高级视觉效果模块
 ├── README.md                       # 项目说明
 └── LICENSE                         # GPLv3 许可证
@@ -104,6 +106,7 @@ telegraphGreasyFork/
 
 ### telegraph.js
 
+- **v2.3.2** — 最新稳定版本（完整功能集）
 - **v2.2** — 自动滚动按钮位置调整，新增拖拽移动功能，速度文本颜色调整
 - **v2.1** — 增加到达底部和回到顶部按钮
 - **v2.0** — 新增移除简介和清空内容功能，重新设计按钮布局（分组面板设计）
@@ -111,6 +114,7 @@ telegraphGreasyFork/
 
 ### Telegraph-Image-Exporter.js
 
+- **v1.1.1** — 新增居中下载窗口和取消按钮功能
 - **v1.0** — 初始版本，支持导出 TXT / Markdown / ZIP
 
 ## 🤝 贡献指南

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Telegraph 图片导出工具 (轻量极速重构版)
 // @namespace    https://telegra.ph
-// @version      1.1
+// @version      1.1.1
 // @description  轻量级导出图片链接、Markdown，极速并行打包下载ZIP
 // @author       winterkingdom
 // @source       https://github.com/youkk425/telegraphGreasyFork
@@ -83,23 +83,135 @@
         URL.revokeObjectURL(link.href);
     }
 
+    // 创建通用下载窗口
+    function createDownloadWindow(titleText, showProgress = false) {
+        // 创建遮罩层
+        const overlay = document.createElement('div');
+        overlay.className = 'telegraph-modal-overlay';
+
+        // 创建弹窗 - 居中显示
+        const modal = document.createElement('div');
+        modal.className = 'telegraph-modal';
+        modal.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            min-width: 300px;
+            z-index: 10000;
+        `;
+
+        const title = document.createElement('h3');
+        title.textContent = titleText;
+        title.style.margin = '0 0 15px';
+        title.style.textAlign = 'center';
+        modal.appendChild(title);
+
+        let progressFill = null;
+        let countText = null;
+
+        if (showProgress) {
+            const progressContainer = document.createElement('div');
+            progressContainer.className = 'telegraph-progress-bar';
+            progressFill = document.createElement('div');
+            progressFill.className = 'telegraph-progress-fill';
+            progressFill.style.width = '0%';
+            progressContainer.appendChild(progressFill);
+            modal.appendChild(progressContainer);
+
+            countText = document.createElement('div');
+            countText.style.textAlign = 'center';
+            countText.style.marginTop = '10px';
+            countText.style.fontSize = '14px';
+            countText.style.color = '#666';
+            countText.textContent = '0 / 0';
+            modal.appendChild(countText);
+        }
+
+        // 添加取消按钮
+        const btnContainer = document.createElement('div');
+        btnContainer.style.display = 'flex';
+        btnContainer.style.justifyContent = 'center';
+        btnContainer.style.gap = '10px';
+        btnContainer.style.marginTop = '15px';
+
+        const cancelBtn = document.createElement('button');
+        cancelBtn.textContent = '取消';
+        cancelBtn.className = 'telegraph-btn';
+        cancelBtn.style.background = 'linear-gradient(135deg, #ff6b6b, #ee5a5a)';
+        cancelBtn.style.padding = '8px 16px';
+        cancelBtn.style.fontSize = '14px';
+
+        btnContainer.appendChild(cancelBtn);
+        modal.appendChild(btnContainer);
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+        return {
+            overlay,
+            modal,
+            title,
+            progressFill,
+            countText,
+            cancelBtn
+        };
+    }
+
     // 功能：导出纯文本链接
     function exportTxt() {
         const imgs = getImages();
         if (!imgs) return;
-        const content = imgs.map(i => i.src).join('\n');
-        downloadFile(content, `${document.title}.txt`);
-        showToast('✓ 导出TXT成功', 'success');
+
+        // 创建下载窗口
+        const { overlay, cancelBtn } = createDownloadWindow('准备导出TXT...');
+
+        // 设置取消按钮事件
+        let cancelled = false;
+        cancelBtn.addEventListener('click', () => {
+            cancelled = true;
+            overlay.classList.add('hiding');
+            setTimeout(() => overlay.remove(), 200);
+            showToast('已取消导出', 'info');
+        });
+
+        // 模拟处理过程
+        setTimeout(() => {
+            if (cancelled) return;
+            const content = imgs.map(i => i.src).join('\n');
+            downloadFile(content, `${document.title}.txt`);
+            overlay.classList.add('hiding');
+            setTimeout(() => overlay.remove(), 200);
+            showToast('✓ 导出TXT成功', 'success');
+        }, 500);
     }
 
     // 功能：导出Markdown
     function exportMd() {
         const imgs = getImages();
         if (!imgs) return;
-        const title = document.title.trim();
-        const content = `# ${title}\n\n` + imgs.map(i => `![](${i.src})`).join('\n\n');
-        downloadFile(content, `${title}.md`);
-        showToast('✓ 导出Markdown成功', 'success');
+
+        // 创建下载窗口
+        const { overlay, cancelBtn } = createDownloadWindow('准备导出Markdown...');
+
+        // 设置取消按钮事件
+        let cancelled = false;
+        cancelBtn.addEventListener('click', () => {
+            cancelled = true;
+            overlay.classList.add('hiding');
+            setTimeout(() => overlay.remove(), 200);
+            showToast('已取消导出', 'info');
+        });
+
+        // 模拟处理过程
+        setTimeout(() => {
+            if (cancelled) return;
+            const title = document.title.trim();
+            const content = `# ${title}\n\n` + imgs.map(i => `![](${i.src})`).join('\n\n');
+            downloadFile(content, `${title}.md`);
+            overlay.classList.add('hiding');
+            setTimeout(() => overlay.remove(), 200);
+            showToast('✓ 导出Markdown成功', 'success');
+        }, 500);
     }
 
     // 功能：极速打包下载 (并行下载优化)
@@ -112,53 +224,28 @@
             return;
         }
 
+        // 创建下载窗口 - 带进度条
+        const { overlay, title, progressFill, countText, cancelBtn } = createDownloadWindow('正在下载图片...', true);
+
+        let cancelled = false;
+        let completedCount = 0;
+        const total = imgs.length;
+
+        // 设置取消按钮事件
+        cancelBtn.addEventListener('click', () => {
+            cancelled = true;
+            overlay.classList.add('hiding');
+            setTimeout(() => overlay.remove(), 200);
+            showToast('已取消打包', 'info');
+        });
+
         const zip = new JSZip();
         const folder = zip.folder(document.title.trim() || 'images');
 
-        // 创建状态提示框 - 使用玻璃态
-        const status = document.createElement('div');
-        status.className = 'telegraph-modal';
-        status.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            min-width: 300px;
-            z-index: 10000;
-        `;
-
-        const title = document.createElement('h3');
-        title.textContent = '正在下载图片...';
-        title.style.margin = '0 0 15px';
-        title.style.textAlign = 'center';
-        status.appendChild(title);
-
-        const progressContainer = document.createElement('div');
-        progressContainer.className = 'telegraph-progress-bar';
-        const progressFill = document.createElement('div');
-        progressFill.className = 'telegraph-progress-fill';
-        progressFill.style.width = '0%';
-        progressContainer.appendChild(progressFill);
-        status.appendChild(progressContainer);
-
-        const countText = document.createElement('div');
-        countText.style.textAlign = 'center';
-        countText.style.marginTop = '10px';
-        countText.style.fontSize = '14px';
-        countText.style.color = '#666';
-        countText.textContent = '0 / 0';
-        status.appendChild(countText);
-
-        const overlay = document.createElement('div');
-        overlay.className = 'telegraph-modal-overlay';
-        overlay.appendChild(status);
-        document.body.appendChild(overlay);
-
-        let count = 0;
-        const total = imgs.length;
-
         // 并行下载所有图片
         const tasks = imgs.map(async (img, index) => {
+            if (cancelled) return;
+
             try {
                 const response = await fetch(img.src);
                 const blob = await response.blob();
@@ -167,17 +254,27 @@
             } catch (e) {
                 console.error(`图片 ${index + 1} 下载失败`, e);
             } finally {
-                count++;
-                const progress = (count / total) * 100;
-                progressFill.style.width = `${progress}%`;
-                countText.textContent = `${count} / ${total}`;
+                if (cancelled) return;
+
+                completedCount++;
+                const progress = (completedCount / total) * 100;
+                if (progressFill) {
+                    progressFill.style.width = `${progress}%`;
+                }
+                if (countText) {
+                    countText.textContent = `${completedCount} / ${total}`;
+                }
             }
         });
 
         // 等待所有下载任务完成
         await Promise.all(tasks);
 
-        title.textContent = '正在生成压缩包...';
+        if (cancelled) return;
+
+        if (title) {
+            title.textContent = '正在生成压缩包...';
+        }
 
         try {
             const content = await zip.generateAsync({ type: 'blob' });
@@ -187,15 +284,14 @@
             link.click();
             URL.revokeObjectURL(link.href);
 
-            // 成功动画
+            overlay.classList.add('hiding');
+            setTimeout(() => overlay.remove(), 200);
             showToast('✓ 打包完成，开始下载', 'success');
         } catch (e) {
             console.error(e);
-            showToast('✕ 打包失败', 'error');
-        } finally {
-            // 淡出动画
             overlay.classList.add('hiding');
             setTimeout(() => overlay.remove(), 200);
+            showToast('✕ 打包失败', 'error');
         }
     }
 

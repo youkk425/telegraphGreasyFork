@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         【免费完整版】Telegraph 批量插入图床图片链接 + 简介工具
 // @namespace    github.com/youkk425
-// @version      2.3.1
+// @version      2.3.2
 // @description  批量插入图床图片链接 + 拖拽排序 + 一键清空列表 + 清除空行 + 快速添加带标签的简介信息+ 新增移除简介和清空内容功能+返回顶部按钮
 // @author       重写版（基于原脚本功能）
 // @source       https://github.com/youkk425/telegraphGreasyFork
@@ -17,29 +17,6 @@
 //原脚本：https://greasyfork.org/zh-CN/scripts/532270
 
 
-
-/*
- * ============================================================================
- *                           v2.2 更新日志
- * ============================================================================
- * 1. 自动播放按钮位置调整 - 放置于返回顶部按钮正上方，与其对齐
- * 2. 新增拖拽移动功能 - 悬停显示移动开关，开启后可自由拖拽按钮位置
- * 3. 速度文本颜色调整 - 改为黑色，提升可读性
- *
- * ============================================================================
- *                           v2.1 更新日志
- * ============================================================================
- * 增加去到底部和回到顶部按钮键
-
- * ============================================================================
- *                           v2.0 更新日志
- * ============================================================================
- * 1. 新增「移除简介」功能 - 一键移除已添加的简介信息
- * 2. 新增「清空内容」功能 - 一键清空编辑器所有内容
- * 3. 重新设计按钮布局 - 采用分组面板设计，更加合理美观
- * 4. 添加完整的代码注释和安全说明
-
-*/
 
 (function () {
     'use strict';
@@ -91,28 +68,28 @@
         toolbar.className = 'telegraph-toolbar';
 
         // ========== 图片操作组 ==========
-        const imageGroup = createButtonGroup('🖼️ 图片操作', '#4caf50');
+        const imageGroup = createButtonGroup('🖼️ 图片操作', '#556DEA');
 
-        const insertBtn = createButton('📷 批量插入图片', '#4caf50', showInputBox);
+        const insertBtn = createButton('📷 批量插入图片', '#556DEA', showInputBox);
         imageGroup.appendChild(insertBtn);
 
         toolbar.appendChild(imageGroup);
 
         // ========== 简介操作组 ==========
-        const introGroup = createButtonGroup('📝 简介操作', '#9c27b0');
+        const introGroup = createButtonGroup('📝 简介操作', '#FD8D6A');
 
-        const addIntroBtn = createButton('➕ 添加简介', '#9c27b0', showIntroPanel);
-        const removeIntroBtn = createButton('➖ 移除简介', '#e91e63', removeIntro);
+        const addIntroBtn = createButton('➕ 添加简介', '#FD8D6A', showIntroPanel);
+        const removeIntroBtn = createButton('➖ 移除简介', '#E6DAAE', removeIntro);
         introGroup.appendChild(addIntroBtn);
         introGroup.appendChild(removeIntroBtn);
 
         toolbar.appendChild(introGroup);
 
         // ========== 清理操作组 ==========
-        const clearGroup = createButtonGroup('🧹 清理操作', '#ff9800');
+        const clearGroup = createButtonGroup('🧹 清理操作', '#A99E8E');
 
-        const clearEmptyBtn = createButton('清除空行', '#ff9800', clearEmptyLines);
-        const clearAllBtn = createButton('清空内容', '#f44336', clearAllContent);
+        const clearEmptyBtn = createButton('清除空行', '#A99E8E', clearEmptyLines);
+        const clearAllBtn = createButton('清空内容', '#A99E8E', clearAllContent);
         clearGroup.appendChild(clearEmptyBtn);
         clearGroup.appendChild(clearAllBtn);
 
@@ -168,8 +145,11 @@
             setTimeout(() => ripple.remove(), 600);
         });
 
-        // 绑定点击事件
-        btn.addEventListener('click', clickHandler);
+        // 绑定点击事件（自动滚动时拦截）
+        btn.addEventListener('click', () => {
+            if (checkAutoScrollInterrupt(clickHandler)) return;
+            clickHandler();
+        });
 
         return btn;
     }
@@ -228,9 +208,9 @@
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);
+                background: linear-gradient(135deg, #556DEA 0%, #7e89f0 100%);
                 color: white;
-                box-shadow: 0 4px 15px rgba(156, 39, 176, 0.4);
+                box-shadow: 0 4px 15px rgba(85, 109, 234, 0.4);
                 transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                 position: relative;
                 overflow: hidden;
@@ -238,8 +218,8 @@
 
             /* 悬停效果：渐变切换 + 上浮 + 阴影变化 */
             .telegraph-nav-btn:hover {
-                background: linear-gradient(135deg, #e91e63 0%, #f06292 100%);
-                box-shadow: 0 6px 25px rgba(233, 30, 99, 0.5), 0 0 20px rgba(233, 30, 99, 0.3);
+                background: linear-gradient(135deg, #FD8D6A 0%, #ffab8a 100%);
+                box-shadow: 0 6px 25px rgba(253, 141, 106, 0.5), 0 0 20px rgba(253, 141, 106, 0.3);
                 transform: translateY(-2px);
                 animation: navWiggle 0.6s ease-in-out;
             }
@@ -247,7 +227,7 @@
             /* 点击效果 */
             .telegraph-nav-btn:active {
                 transform: translateY(0) scale(0.95);
-                box-shadow: 0 2px 10px rgba(233, 30, 99, 0.4);
+                box-shadow: 0 2px 10px rgba(253, 141, 106, 0.4);
             }
 
             /* 按钮内部图标 */
@@ -322,18 +302,18 @@
             }
 
             .telegraph-move-toggle:hover {
-                background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-                border-color: #2196f3;
+                background: linear-gradient(135deg, #E6DAAE 0%, #e0d0a0 100%);
+                border-color: #A99E8E;
             }
 
             .telegraph-move-toggle.active {
-                background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+                background: linear-gradient(135deg, #556DEA 0%, #7590f5 100%);
                 color: white;
-                border-color: #4caf50;
+                border-color: #556DEA;
             }
 
             .telegraph-move-toggle.active:hover {
-                background: linear-gradient(135deg, #66bb6a 0%, #81c784 100%);
+                background: linear-gradient(135deg, #7590f5 0%, #95abff 100%);
             }
 
             /* 主控制按钮 - 玻璃态渐变 */
@@ -348,14 +328,14 @@
                 align-items: center;
                 justify-content: center;
                 background: linear-gradient(135deg,
-                    rgba(138, 43, 226, 0.7) 0%,
-                    rgba(75, 0, 130, 0.6) 50%,
-                    rgba(148, 0, 211, 0.7) 100%);
+                    rgba(85, 109, 234, 0.7) 0%,
+                    rgba(75, 95, 200, 0.6) 50%,
+                    rgba(100, 120, 240, 0.7) 100%);
                 backdrop-filter: blur(12px);
                 -webkit-backdrop-filter: blur(12px);
                 color: white;
                 box-shadow:
-                    0 8px 32px rgba(138, 43, 226, 0.4),
+                    0 8px 32px rgba(85, 109, 234, 0.4),
                     inset 0 1px 1px rgba(255, 255, 255, 0.2),
                     0 0 0 1px rgba(255, 255, 255, 0.1);
                 transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -372,7 +352,7 @@
                     transparent,
                     rgba(255, 255, 255, 0.3),
                     transparent,
-                    rgba(255, 182, 193, 0.3),
+                    rgba(253, 141, 106, 0.3),
                     transparent);
                 border-radius: 50%;
                 animation: rotateGlow 4s linear infinite;
@@ -393,25 +373,25 @@
             .telegraph-autoscroll-btn:hover {
                 transform: translateY(-3px) scale(1.05);
                 background: linear-gradient(135deg,
-                    rgba(186, 85, 211, 0.85) 0%,
-                    rgba(138, 43, 226, 0.75) 50%,
-                    rgba(218, 112, 214, 0.85) 100%);
+                    rgba(100, 125, 245, 0.85) 0%,
+                    rgba(85, 109, 234, 0.75) 50%,
+                    rgba(115, 140, 250, 0.85) 100%);
                 box-shadow:
-                    0 12px 40px rgba(186, 85, 211, 0.5),
+                    0 12px 40px rgba(85, 109, 234, 0.5),
                     inset 0 1px 1px rgba(255, 255, 255, 0.3),
-                    0 0 20px rgba(218, 112, 214, 0.4);
+                    0 0 20px rgba(85, 109, 234, 0.4);
             }
 
             /* 按钮激活状态（滚动中） */
             .telegraph-autoscroll-btn.active {
                 background: linear-gradient(135deg,
-                    rgba(255, 107, 107, 0.85) 0%,
-                    rgba(255, 71, 87, 0.75) 50%,
-                    rgba(255, 127, 80, 0.85) 100%);
+                    rgba(253, 141, 106, 0.85) 0%,
+                    rgba(240, 130, 95, 0.75) 50%,
+                    rgba(255, 155, 125, 0.85) 100%);
                 box-shadow:
-                    0 8px 32px rgba(255, 107, 107, 0.5),
+                    0 8px 32px rgba(253, 141, 106, 0.5),
                     inset 0 1px 1px rgba(255, 255, 255, 0.2),
-                    0 0 25px rgba(255, 107, 107, 0.5);
+                    0 0 25px rgba(253, 141, 106, 0.5);
                 animation: pulseActive 1.5s ease-in-out infinite;
             }
 
@@ -419,14 +399,14 @@
                 0%, 100% {
                     transform: scale(1);
                     box-shadow:
-                        0 8px 32px rgba(255, 107, 107, 0.5),
-                        0 0 25px rgba(255, 107, 107, 0.5);
+                        0 8px 32px rgba(253, 141, 106, 0.5),
+                        0 0 25px rgba(253, 141, 106, 0.5);
                 }
                 50% {
                     transform: scale(1.02);
                     box-shadow:
-                        0 8px 32px rgba(255, 107, 107, 0.6),
-                        0 0 35px rgba(255, 107, 107, 0.6);
+                        0 8px 32px rgba(253, 141, 106, 0.6),
+                        0 0 35px rgba(253, 141, 106, 0.6);
                 }
             }
 
@@ -464,7 +444,7 @@
             .telegraph-speed-label {
                 font-size: 11px;
                 font-weight: 600;
-                color: rgba(66,165,245,0.5);
+                color: rgba(85, 109, 234, 0.5);
                 text-transform: uppercase;
                 letter-spacing: 1px;
                 text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
@@ -488,15 +468,15 @@
                 height: 6px;
                 border-radius: 3px;
                 background: linear-gradient(90deg,
-                    #4facfe 0%,
-                    #00f2fe 25%,
-                    #43e97b 50%,
-                    #f9d423 75%,
-                    #ff6b6b 100%);
+                    #556DEA 0%,
+                    #7590f5 25%,
+                    #A99E8E 50%,
+                    #E6DAAE 75%,
+                    #FD8D6A 100%);
                 outline: none;
                 cursor: pointer;
                 box-shadow:
-                    0 2px 10px rgba(79, 172, 254, 0.3),
+                    0 2px 10px rgba(85, 109, 234, 0.3),
                     inset 0 1px 2px rgba(0, 0, 0, 0.1);
             }
 
@@ -575,11 +555,15 @@
          * @description 平滑滚动到页面顶部
          */
         scrollToTopBtn.addEventListener('click', () => {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-            showToast('已回到顶部', 'info');
+            const action = () => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+                showToast('已回到顶部', 'info');
+            };
+            if (checkAutoScrollInterrupt(action)) return;
+            action();
         });
 
         // ========== 到达底部按钮 ==========
@@ -594,16 +578,20 @@
          * @description 平滑滚动到页面底部
          */
         scrollToBottomBtn.addEventListener('click', () => {
-            // 获取页面实际高度
-            const scrollHeight = Math.max(
-                document.documentElement.scrollHeight,
-                document.body.scrollHeight
-            );
-            window.scrollTo({
-                top: scrollHeight,
-                behavior: 'smooth'
-            });
-            showToast('已到达底部', 'info');
+            const action = () => {
+                // 获取页面实际高度
+                const scrollHeight = Math.max(
+                    document.documentElement.scrollHeight,
+                    document.body.scrollHeight
+                );
+                window.scrollTo({
+                    top: scrollHeight,
+                    behavior: 'smooth'
+                });
+                showToast('已到达底部', 'info');
+            };
+            if (checkAutoScrollInterrupt(action)) return;
+            action();
         });
 
         // 组装导航容器
@@ -625,7 +613,9 @@
         isScrolling: false,
         speed: 2,// 默认速度 (0-100)
         animationId: null,// requestAnimationFrame ID
-        direction: 1// 1: 向下, -1: 向上
+        direction: 1,// 1: 向下, -1: 向上
+        mainBtn: null,// 自动滚动按钮引用
+        suppressInterrupt: false// 不再提示自动滚动中断
     };
 
     /**
@@ -731,6 +721,7 @@
         mainBtn.innerHTML = '▶️';
         mainBtn.title = '自动滚动（点击开始/暂停，悬停调节速度）';
         mainBtn.setAttribute('aria-label', '自动滚动控制');
+        autoScrollState.mainBtn = mainBtn;
 
         /**
          * 主按钮点击事件
@@ -743,8 +734,6 @@
             if (autoScrollState.isScrolling) {
                 // 停止滚动
                 stopAutoScroll();
-                mainBtn.classList.remove('active');
-                mainBtn.innerHTML = '▶️';
                 showToast('已停止自动滚动', 'info');
             } else {
                 // 开始滚动
@@ -834,6 +823,114 @@
     }
 
     /**
+     * 检查自动滚动是否正在运行，若正在运行则拦截操作
+     * @param {Function} callback - 确认暂停后执行的回调
+     * @returns {boolean} 是否被拦截（true=被拦截，false=未拦截可继续）
+     */
+    function checkAutoScrollInterrupt(callback) {
+        if (!autoScrollState.isScrolling) return false;
+
+        if (autoScrollState.suppressInterrupt) {
+            // 不再提示，直接暂停并执行
+            stopAutoScroll();
+            showToast('自动滚动已暂停', 'info');
+            if (callback) callback();
+            return true;
+        }
+
+        showAutoScrollInterruptDialog(callback);
+        return true;
+    }
+
+    /**
+     * 显示自动滚动中断确认弹窗
+     * @param {Function} callback - 确认暂停后执行的回调
+     */
+    function showAutoScrollInterruptDialog(callback) {
+        // 暂停自动滚动（保留方向状态以便恢复）
+        const savedDirection = autoScrollState.direction;
+        autoScrollState.isScrolling = false;
+        if (autoScrollState.animationId) {
+            cancelAnimationFrame(autoScrollState.animationId);
+            autoScrollState.animationId = null;
+        }
+
+        // 恢复自动滚动的辅助函数
+        const resumeAutoScroll = () => {
+            autoScrollState.direction = savedDirection;
+            startAutoScroll();
+        };
+
+        // 遮罩层
+        const overlay = document.createElement('div');
+        overlay.className = 'telegraph-modal-overlay';
+
+        // 弹窗容器
+        const dialog = document.createElement('div');
+        dialog.className = 'telegraph-modal';
+        dialog.style.maxWidth = '360px';
+        dialog.style.padding = '24px';
+
+        // 提示文字
+        const msg = document.createElement('p');
+        msg.textContent = '自动滚动正在进行中，是否暂停自动滚动后继续操作？';
+        msg.style.cssText = 'margin:0 0 16px 0;font-size:14px;color:#333;line-height:1.6;';
+        dialog.appendChild(msg);
+
+        // 不再提示勾选框
+        const checkboxLine = document.createElement('label');
+        checkboxLine.style.cssText = 'display:flex;align-items:left;gap:10px;margin-bottom:20px;font-size:13px;color:#666;cursor:pointer;user-select:none;flex-wrap:nowrap;';
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.style.cssText = 'margin:0;cursor:pointer;';
+        const checkboxText = document.createElement('span');
+        checkboxText.textContent = '勾选后不再提示，后续直接暂停';
+        checkboxLine.appendChild(checkbox);
+        checkboxLine.appendChild(checkboxText);
+        dialog.appendChild(checkboxLine);
+
+        // 按钮行
+        const btnRow = document.createElement('div');
+        btnRow.style.cssText = 'display:flex;gap:10px;justify-content:flex-end;';
+
+        // 取消按钮
+        const cancelBtn = document.createElement('button');
+        cancelBtn.textContent = '取消';
+        cancelBtn.className = 'telegraph-modal-btn cancel';
+        cancelBtn.onclick = () => {
+            overlay.remove();
+            resumeAutoScroll();
+        };
+
+        // 确认暂停按钮
+        const confirmBtn = document.createElement('button');
+        confirmBtn.textContent = '暂停并继续';
+        confirmBtn.className = 'telegraph-modal-btn confirm';
+        confirmBtn.onclick = () => {
+            if (checkbox.checked) {
+                autoScrollState.suppressInterrupt = true;
+            }
+            stopAutoScroll();
+            showToast('自动滚动已暂停', 'info');
+            overlay.remove();
+            if (callback) callback();
+        };
+
+        btnRow.appendChild(cancelBtn);
+        btnRow.appendChild(confirmBtn);
+        dialog.appendChild(btnRow);
+
+        overlay.appendChild(dialog);
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.remove();
+                resumeAutoScroll();
+            }
+        });
+        document.body.appendChild(overlay);
+    }
+
+    /**
      * 开始自动滚动
      * @description 使用 requestAnimationFrame 实现平滑滚动
      */
@@ -893,6 +990,11 @@
         if (autoScrollState.animationId) {
             cancelAnimationFrame(autoScrollState.animationId);
             autoScrollState.animationId = null;
+        }
+        // 恢复按钮为暂停样式
+        if (autoScrollState.mainBtn) {
+            autoScrollState.mainBtn.classList.remove('active');
+            autoScrollState.mainBtn.innerHTML = '▶️';
         }
     }
 
@@ -1079,7 +1181,7 @@
         const confirmBtn = document.createElement('button');
         confirmBtn.textContent = '✅ 确认并排序';
         styleBtn(confirmBtn);
-        confirmBtn.style.background = '#4caf50';
+        confirmBtn.style.background = '#556DEA';
 
         /**
          * 确认按钮点击事件处理
@@ -1106,7 +1208,7 @@
         const cancelBtn = document.createElement('button');
         cancelBtn.textContent = '取消';
         styleBtn(cancelBtn);
-        cancelBtn.style.background = '#f44336'; // 红色背景
+        cancelBtn.style.background = '#A99E8E'; // 取消按钮背景
         cancelBtn.onclick = () => {
             overlay.classList.add('hiding');
             setTimeout(() => overlay.remove(), 200);
@@ -1164,7 +1266,7 @@
         sortableContainer.style.flexWrap = 'wrap';
         sortableContainer.style.gap = '12px';
         sortableContainer.style.padding = '15px';
-        sortableContainer.style.background = '#f8f9fa';
+        sortableContainer.style.background = '#F4F5EB';
         sortableContainer.style.border = '2px dashed #ccc';
         sortableContainer.style.borderRadius = '8px';
         sortableContainer.style.minHeight = '320px';
@@ -1222,7 +1324,7 @@
         const clearAllBtn = document.createElement('button');
         clearAllBtn.textContent = '全部清空列表';
         styleBtn(clearAllBtn);
-        clearAllBtn.style.background = '#f44336';
+        clearAllBtn.style.background = '#A99E8E';
         clearAllBtn.onclick = () => {
             if (confirm('确定清空当前图片列表？（不影响已插入内容）')) {
                 imageLinks = [];
@@ -1235,7 +1337,7 @@
         const confirmBtn = document.createElement('button');
         confirmBtn.textContent = '✅ 确认插入编辑器';
         styleBtn(confirmBtn);
-        confirmBtn.style.background = '#4caf50';
+        confirmBtn.style.background = '#556DEA';
         confirmBtn.style.flex = '1';
         confirmBtn.onclick = () => {
             sortedLinks = Array.from(sortableContainer.children)
@@ -1251,7 +1353,7 @@
         const cancelBtn = document.createElement('button');
         cancelBtn.textContent = '取消';
         styleBtn(cancelBtn);
-        cancelBtn.style.background = '#f44336'; // 红色背景
+        cancelBtn.style.background = '#A99E8E'; // 取消按钮背景
         cancelBtn.onclick = () => {
             overlay.classList.add('hiding');
             setTimeout(() => overlay.remove(), 200);
@@ -1420,7 +1522,7 @@
                     day: 'numeric'
                 });
                 p.style.padding = '9px 12px';
-                p.style.background = '#f5f5f5';
+                p.style.background = '#F4F5EB';
                 p.style.borderRadius = '6px';
                 row.appendChild(p);
             } else {
@@ -1444,7 +1546,7 @@
         Object.assign(confirm.style, {
             flex: '1',
             padding: '12px',
-            background: '#9c27b0',
+            background: '#FD8D6A',
             color: 'white',
             border: 'none',
             borderRadius: '6px',
@@ -1534,7 +1636,7 @@
         cancel.textContent = '取消';
         Object.assign(cancel.style, {
             padding: '12px 28px',
-            background: '#f44336', // 红色背景
+            background: '#A99E8E', // 取消按钮背景
             color: 'white',
             border: 'none',
             borderRadius: '6px',
