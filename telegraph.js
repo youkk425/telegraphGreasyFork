@@ -9,7 +9,7 @@
 // @match        https://telegra.ph/*
 // @grant        none
 // @require      https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js
-// @require      https://cdn.jsdelivr.net/gh/youkk425/telegraphGreasyFork@master/advanced-styles.js
+// @require      https://update.greasyfork.org/scripts/577173/1819105/advanced-stylesjs.js
 // ==/UserScript==
 
 /* global Sortable */

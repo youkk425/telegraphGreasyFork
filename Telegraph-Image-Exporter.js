@@ -6,7 +6,7 @@
 // @author       winterkingdom
 // @source       https://github.com/youkk425/telegraphGreasyFork
 // @match        *://telegra.ph/*
-// @require      https://cdn.jsdelivr.net/gh/youkk425/telegraphGreasyFork@master/advanced-styles.js
+// @require      https://update.greasyfork.org/scripts/577173/1819105/advanced-stylesjs.js
 // @require      https://cdn.jsdelivr.net/npm/jszip@3.7.1/dist/jszip.min.js
 // @grant        none
 // @license      MIT
