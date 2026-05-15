@@ -2,8 +2,8 @@
  * ==============================================================================
  *                        高级样式和动画模块
  * ==============================================================================
- * @description 包含所有高级视觉效果：玻璃态、霓虹灯、波纹、磁吸、3D效果等
- * @version 3.0
+ * @description 新粗野主义（Neo-Brutalism）风格：粗黑边框、硬阴影、荧光配色、直角几何
+ * @version 4.0
  */
 
 (function() {
@@ -23,29 +23,26 @@
              *                              CSS 变量系统
              * ============================================================================ */
             :root {
-                --tg-primary: #667eea;
-                --tg-secondary: #764ba2;
-                --tg-success: #4caf50;
-                --tg-warning: #ff9800;
-                --tg-error: #f44336;
-                --tg-info: #2196f3;
+                /* 新粗野主义配色 */
+                --tg-yellow: #CCFF00;
+                --tg-purple: #6A00FF;
+                --tg-pink: #FF6B9D;
+                --tg-black: #000;
+                --tg-white: #fff;
+                --tg-light-gray: #f4f4f4;
 
-                --tg-glass-bg: rgba(255, 255, 255, 0.7);
-                --tg-glass-border: rgba(255, 255, 255, 0.3);
-                --tg-glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+                /* 功能色 */
+                --tg-success: #10b981;
+                --tg-error: #ef4444;
+                --tg-info: #3b82f6;
 
-                --tg-neon-primary: 0 0 20px rgba(102, 126, 234, 0.5),
-                                   0 0 40px rgba(102, 126, 234, 0.3),
-                                   inset 0 0 20px rgba(102, 126, 234, 0.1);
-                --tg-neon-success: 0 0 20px rgba(76, 175, 80, 0.5),
-                                   0 0 40px rgba(76, 175, 80, 0.3),
-                                   inset 0 0 20px rgba(76, 175, 80, 0.1);
-                --tg-neon-error: 0 0 20px rgba(244, 67, 54, 0.5),
-                                 0 0 40px rgba(244, 67, 54, 0.3),
-                                 inset 0 0 20px rgba(244, 67, 54, 0.1);
+                /* 硬阴影预设 */
+                --tg-shadow-sm: 3px 3px 0px #000;
+                --tg-shadow-md: 5px 5px 0px #000;
+                --tg-shadow-lg: 7px 7px 0px #000;
 
-                --tg-ease-smooth: cubic-bezier(0.23, 1, 0.32, 1);
-                --tg-ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+                /* 边框 */
+                --tg-border: 2px solid #000;
             }
 
             /* ============================================================================
@@ -58,71 +55,41 @@
                 z-index: 9999;
                 display: flex;
                 flex-direction: column;
-                gap: 10px;
+                gap: 12px;
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                perspective: 1000px;
             }
 
-            /* 工具栏分组 - 磨砂玻璃效果 */
+            /* 工具栏分组 - 粗野主义卡片 */
             .telegraph-toolbar-group {
-                background: linear-gradient(135deg,
-                    rgba(255, 255, 255, 0.9) 0%,
-                    rgba(255, 255, 255, 0.7) 100%);
-                backdrop-filter: blur(20px);
-                -webkit-backdrop-filter: blur(20px);
-                border: 1px solid var(--tg-glass-border);
-                border-radius: 12px;
-                padding: 12px;
-                box-shadow: var(--tg-glass-shadow);
+                background: var(--tg-white);
+                border: var(--tg-border);
+                padding: 14px;
+                box-shadow: var(--tg-shadow-md);
                 display: flex;
                 flex-direction: column;
                 gap: 8px;
                 min-width: 150px;
                 position: relative;
-                overflow: hidden;
-                transition: all 0.4s var(--tg-ease-smooth);
-                transform-style: preserve-3d;
-            }
-
-            .telegraph-toolbar-group::before {
-                content: '';
-                position: absolute;
-                inset: 0;
-                background: linear-gradient(45deg,
-                    transparent 40%,
-                    rgba(255, 255, 255, 0.3) 50%,
-                    transparent 60%);
-                transform: translateX(-100%);
-                transition: transform 0.6s ease;
-            }
-
-            .telegraph-toolbar-group:hover::before {
-                transform: translateX(100%);
+                transition: box-shadow 0.15s ease, transform 0.15s ease;
             }
 
             .telegraph-toolbar-group:hover {
-                transform: translateY(-3px) rotateX(2deg);
-                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15),
-                            0 0 30px rgba(102, 126, 234, 0.1);
+                transform: translate(-2px, -2px);
+                box-shadow: 8px 8px 0px #000;
             }
 
             /* 分组标题 */
             .telegraph-toolbar-title {
                 font-size: 12px;
-                font-weight: 700;
+                font-weight: 900;
                 text-transform: uppercase;
                 letter-spacing: 1px;
                 padding: 4px 8px;
                 margin-bottom: 4px;
-                border-radius: 6px;
-                position: relative;
-                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-                transition: all 0.3s ease;
-            }
-
-            .telegraph-toolbar-group:hover .telegraph-toolbar-title {
-                text-shadow: 0 0 10px currentColor,
-                             0 0 20px currentColor;
+                color: var(--tg-black);
+                background: var(--tg-yellow);
+                display: inline-block;
+                border: 2px solid #000;
             }
 
             /* ============================================================================
@@ -131,57 +98,35 @@
             .telegraph-btn {
                 position: relative;
                 padding: 10px 14px;
-                border: none;
-                border-radius: 8px;
+                border: var(--tg-border);
                 cursor: pointer;
                 font-size: 13px;
-                font-weight: 600;
-                color: white;
+                font-weight: 700;
+                color: var(--tg-black);
                 white-space: nowrap;
                 text-align: left;
-                overflow: hidden;
-                background: linear-gradient(135deg, var(--tg-primary), var(--tg-secondary));
-                box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3),
-                            inset 0 1px 0 rgba(255, 255, 255, 0.2);
-                transition: all 0.4s var(--tg-ease-smooth);
-                transform-style: preserve-3d;
-                will-change: transform;
-            }
-
-            .telegraph-btn::before {
-                content: '';
-                position: absolute;
-                inset: 0;
-                background: radial-gradient(circle at 30% 30%,
-                    rgba(255, 255, 255, 0.3) 0%,
-                    transparent 60%);
-                opacity: 0;
-                transition: opacity 0.3s ease;
+                background: var(--tg-white);
+                box-shadow: var(--tg-shadow-sm);
+                transition: all 0.12s ease;
             }
 
             .telegraph-btn:hover {
-                transform: translateY(-2px) translateX(5px) rotateY(-5deg);
-                box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4),
-                            0 0 30px rgba(102, 126, 234, 0.2),
-                            inset 0 1px 0 rgba(255, 255, 255, 0.3);
-            }
-
-            .telegraph-btn:hover::before {
-                opacity: 1;
+                background: var(--tg-yellow);
+                transform: translate(-2px, -2px);
+                box-shadow: 5px 5px 0px #000;
             }
 
             .telegraph-btn:active {
-                transform: translateY(0) scale(0.96);
-                box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+                transform: translate(1px, 1px);
+                box-shadow: 1px 1px 0px #000;
             }
 
             /* 按钮波纹效果 */
             .telegraph-btn-ripple {
                 position: absolute;
-                border-radius: 50%;
-                background: rgba(255, 255, 255, 0.4);
+                background: rgba(0, 0, 0, 0.15);
                 transform: scale(0);
-                animation: rippleEffect 0.6s ease-out;
+                animation: rippleEffect 0.5s ease-out;
                 pointer-events: none;
             }
 
@@ -205,83 +150,33 @@
                 z-index: 9998;
             }
 
-            /* 导航按钮 - 流体渐变 + 霓虹灯 */
+            /* 导航按钮 - 粗野主义圆形 */
             .telegraph-nav-btn {
                 width: 54px;
                 height: 54px;
-                border: none;
-                border-radius: 50%;
+                border: var(--tg-border);
                 cursor: pointer;
                 font-size: 22px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                background: linear-gradient(135deg, var(--tg-primary), var(--tg-secondary));
-                background-size: 200% 200%;
-                color: white;
+                background: var(--tg-yellow);
+                color: var(--tg-black);
                 position: relative;
-                overflow: hidden;
-                transition: all 0.4s var(--tg-ease-smooth);
-                box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-                will-change: transform, background-position;
-            }
-
-            .telegraph-nav-btn::before {
-                content: '';
-                position: absolute;
-                inset: 0;
-                background: radial-gradient(circle at 30% 30%,
-                    rgba(255, 255, 255, 0.4) 0%,
-                    transparent 60%);
-                opacity: 0;
-                transition: opacity 0.3s ease;
-            }
-
-            .telegraph-nav-btn::after {
-                content: '';
-                position: absolute;
-                inset: -3px;
-                border-radius: 50%;
-                background: conic-gradient(from 0deg,
-                    transparent,
-                    rgba(255, 255, 255, 0.3),
-                    transparent,
-                    rgba(118, 75, 162, 0.3),
-                    transparent);
-                opacity: 0;
-                z-index: -1;
-                transition: opacity 0.4s ease;
+                box-shadow: var(--tg-shadow-sm);
+                transition: all 0.12s ease;
             }
 
             .telegraph-nav-btn:hover {
-                animation: gradientFlow 3s ease infinite;
-                transform: translateY(-4px) scale(1.08);
-                box-shadow: var(--tg-neon-primary),
-                            0 8px 25px rgba(102, 126, 234, 0.5);
-            }
-
-            .telegraph-nav-btn:hover::before {
-                opacity: 1;
-            }
-
-            .telegraph-nav-btn:hover::after {
-                opacity: 1;
-                animation: rotateGlow 4s linear infinite;
+                background: var(--tg-purple);
+                color: var(--tg-white);
+                transform: translate(-3px, -3px);
+                box-shadow: 6px 6px 0px #000;
             }
 
             .telegraph-nav-btn:active {
-                transform: translateY(-2px) scale(1);
-                box-shadow: 0 2px 10px rgba(102, 126, 234, 0.4);
-            }
-
-            @keyframes gradientFlow {
-                0%, 100% { background-position: 0% 50%; }
-                50% { background-position: 100% 50%; }
-            }
-
-            @keyframes rotateGlow {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
+                transform: translate(1px, 1px);
+                box-shadow: 1px 1px 0px #000;
             }
 
             /* ============================================================================
@@ -290,19 +185,17 @@
             .telegraph-modal-overlay {
                 position: fixed;
                 inset: 0;
-                background: rgba(0, 0, 0, 0.6);
-                backdrop-filter: blur(8px);
-                -webkit-backdrop-filter: blur(8px);
+                background: rgba(0, 0, 0, 0.5);
                 z-index: 10000;
                 display: flex;
                 justify-content: center;
                 align-items: center;
                 opacity: 0;
-                animation: modalFadeIn 0.3s ease forwards;
+                animation: modalFadeIn 0.2s ease forwards;
             }
 
             .telegraph-modal-overlay.hiding {
-                animation: modalFadeOut 0.2s ease forwards;
+                animation: modalFadeOut 0.15s ease forwards;
             }
 
             @keyframes modalFadeIn {
@@ -316,24 +209,20 @@
             }
 
             .telegraph-modal {
-                background: linear-gradient(135deg,
-                    rgba(255, 255, 255, 0.95) 0%,
-                    rgba(255, 255, 255, 0.9) 100%);
-                backdrop-filter: blur(20px);
-                -webkit-backdrop-filter: blur(20px);
-                border: 1px solid var(--tg-glass-border);
-                border-radius: 16px;
-                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3),
-                            0 0 40px rgba(102, 126, 234, 0.1);
+                background: var(--tg-white);
+                border: var(--tg-border);
+                box-shadow: var(--tg-shadow-lg);
                 padding: 28px;
-                transform: scale(0.9) translateY(20px);
+                max-width: 500px;
+                width: 90%;
+                transform: translateY(10px);
                 opacity: 0;
-                animation: modalSlideIn 0.4s var(--tg-ease-bounce) forwards;
+                animation: modalSlideIn 0.25s ease forwards;
             }
 
             @keyframes modalSlideIn {
                 to {
-                    transform: scale(1) translateY(0);
+                    transform: translateY(0);
                     opacity: 1;
                 }
             }
@@ -341,32 +230,33 @@
             .telegraph-modal h3 {
                 margin: 0 0 20px;
                 font-size: 20px;
-                font-weight: 700;
+                font-weight: 900;
                 text-align: center;
-                background: linear-gradient(135deg, var(--tg-primary), var(--tg-secondary));
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                background-clip: text;
+                color: var(--tg-black);
+                background: var(--tg-yellow);
+                padding: 8px 16px;
+                border: 2px solid #000;
+                display: inline-block;
+                width: 100%;
+                box-sizing: border-box;
             }
 
             .telegraph-modal textarea,
             .telegraph-modal input {
                 width: 100%;
                 padding: 12px 16px;
-                border: 2px solid rgba(102, 126, 234, 0.2);
-                border-radius: 10px;
+                border: var(--tg-border);
                 font-size: 14px;
-                background: rgba(255, 255, 255, 0.8);
-                transition: all 0.3s ease;
+                background: var(--tg-white);
+                transition: box-shadow 0.15s ease;
                 box-sizing: border-box;
+                font-family: inherit;
             }
 
             .telegraph-modal textarea:focus,
             .telegraph-modal input:focus {
                 outline: none;
-                border-color: var(--tg-primary);
-                box-shadow: 0 0 20px rgba(102, 126, 234, 0.2);
-                background: white;
+                box-shadow: 3px 3px 0px var(--tg-purple);
             }
 
             /* ============================================================================
@@ -376,117 +266,59 @@
                 position: fixed;
                 top: 50%;
                 left: 50%;
-                transform: translate(-50%, -50%) scale(0.8);
+                transform: translate(-50%, -50%) scale(0.9);
                 padding: 16px 24px;
-                border-radius: 12px;
-                color: white;
+                color: var(--tg-black);
                 font-size: 15px;
-                font-weight: 600;
+                font-weight: 700;
                 z-index: 100001;
                 opacity: 0;
                 pointer-events: none;
                 display: flex;
                 align-items: center;
                 gap: 10px;
+                border: var(--tg-border);
             }
 
             .telegraph-toast.success {
-                background: linear-gradient(135deg,
-                    rgba(76, 175, 80, 0.9) 0%,
-                    rgba(67, 160, 71, 0.9) 100%);
-                box-shadow: var(--tg-neon-success);
-                animation: toastSlideUp 0.4s var(--tg-ease-smooth) forwards;
+                background: var(--tg-yellow);
+                box-shadow: var(--tg-shadow-md);
+                animation: toastPopIn 0.25s ease forwards;
             }
 
             .telegraph-toast.error {
-                background: linear-gradient(135deg,
-                    rgba(244, 67, 54, 0.9) 0%,
-                    rgba(229, 57, 53, 0.9) 100%);
-                box-shadow: var(--tg-neon-error);
-                animation: toastShake 0.5s ease forwards;
+                background: var(--tg-pink);
+                box-shadow: var(--tg-shadow-md);
+                animation: toastPopIn 0.25s ease forwards;
             }
 
             .telegraph-toast.info {
-                background: linear-gradient(135deg,
-                    rgba(33, 150, 243, 0.9) 0%,
-                    rgba(25, 118, 210, 0.9) 100%);
-                box-shadow: 0 0 20px rgba(33, 150, 243, 0.4);
-                animation: toastSlideDown 0.4s var(--tg-ease-smooth) forwards;
+                background: var(--tg-white);
+                box-shadow: var(--tg-shadow-md);
+                animation: toastPopIn 0.25s ease forwards;
             }
 
             .telegraph-toast.hiding {
-                animation: toastHide 0.3s ease forwards;
+                animation: toastHide 0.2s ease forwards;
             }
 
-            @keyframes toastSlideUp {
+            @keyframes toastPopIn {
                 to {
                     transform: translate(-50%, -50%) scale(1);
                     opacity: 1;
-                }
-            }
-
-            @keyframes toastSlideDown {
-                to {
-                    transform: translate(-50%, -50%) scale(1);
-                    opacity: 1;
-                }
-            }
-
-            @keyframes toastShake {
-                0%, 100% {
-                    transform: translate(-50%, -50%) scale(0.8) rotate(0deg);
-                    opacity: 0;
-                }
-                20% {
-                    transform: translate(-50%, -50%) scale(0.95) rotate(-5deg);
-                    opacity: 1;
-                }
-                40% {
-                    transform: translate(-50%, -50%) scale(1) rotate(5deg);
-                }
-                60% {
-                    transform: translate(-50%, -50%) scale(1) rotate(-3deg);
-                }
-                80% {
-                    transform: translate(-50%, -50%) scale(1) rotate(2deg);
-                }
-                90% {
-                    transform: translate(-50%, -50%) scale(1) rotate(-1deg);
                 }
             }
 
             @keyframes toastHide {
                 to {
-                    transform: translate(-50%, -50%) scale(0.8);
+                    transform: translate(-50%, -50%) scale(0.9);
                     opacity: 0;
                 }
             }
 
-            /* Toast 图标动画 */
+            /* Toast 图标 */
             .telegraph-toast-icon {
                 font-size: 20px;
-            }
-
-            .telegraph-toast.success .telegraph-toast-icon {
-                animation: iconCheck 0.6s ease forwards;
-            }
-
-            .telegraph-toast.error .telegraph-toast-icon {
-                animation: iconError 0.5s ease forwards;
-            }
-
-            @keyframes iconCheck {
-                0% { transform: scale(0) rotate(-180deg); }
-                50% { transform: scale(1.2) rotate(0deg); }
-                100% { transform: scale(1) rotate(10deg); }
-            }
-
-            @keyframes iconError {
-                0%, 100% { transform: rotate(0deg); }
-                20% { transform: rotate(-10deg); }
-                40% { transform: rotate(10deg); }
-                60% { transform: rotate(-8deg); }
-                80% { transform: rotate(8deg); }
             }
 
             /* ============================================================================
@@ -494,28 +326,17 @@
              * ============================================================================ */
             .telegraph-progress-bar {
                 width: 100%;
-                height: 4px;
-                background: rgba(0, 0, 0, 0.1);
-                border-radius: 2px;
+                height: 6px;
+                background: var(--tg-white);
+                border: var(--tg-border);
                 overflow: hidden;
                 margin-top: 10px;
             }
 
             .telegraph-progress-fill {
                 height: 100%;
-                background: linear-gradient(90deg,
-                    var(--tg-primary),
-                    var(--tg-secondary),
-                    var(--tg-primary));
-                background-size: 200% 100%;
-                border-radius: 2px;
+                background: var(--tg-purple);
                 transition: width 0.3s ease;
-                animation: progressGradient 2s linear infinite;
-            }
-
-            @keyframes progressGradient {
-                0% { background-position: 0% 0%; }
-                100% { background-position: 200% 0%; }
             }
         `;
         document.head.appendChild(style);
